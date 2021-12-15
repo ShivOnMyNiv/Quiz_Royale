@@ -42,8 +42,7 @@ async def on_ready():
     await client.change_presence(activity=discord.Game("+help for more info"))
 
 
-def AutoFalse(message):
-    return False
+
 
 @client.command()
 async def run(message, Id):
@@ -84,8 +83,11 @@ async def run(message, Id):
                 client.players[channel.id][user.name] = 0
             return False
 
+        def AutoFalse(message):
+            return False
+
         try:
-            Adding = await client.wait_for("reaction_add", check=FalseReaction, timeout=10)
+            await client.wait_for("reaction_add", check=FalseReaction, timeout=10)
         except:
             pass
         InvMsg = await channel.history().find(lambda m: m.id == InvMsg.id)
@@ -112,9 +114,8 @@ async def run(message, Id):
             else:
                 return False
 
-        setting = None
         try:
-            setting = await client.wait_for("reaction_add", check=setCheck, timeout=20)
+            await client.wait_for("reaction_add", check=setCheck, timeout=20)
         except:
             try:
                 await OptMsg.clear_reaction("🇦")
@@ -155,9 +156,8 @@ async def run(message, Id):
             else:
                 return False
 
-        setting = None
         try:
-            setting = await client.wait_for("reaction_add", check=randCheck, timeout=20)
+            await client.wait_for("reaction_add", check=randCheck, timeout=20)
         except:
             if MessageMan:
                 await RandQ.clear_reaction("✔️")
@@ -221,7 +221,7 @@ async def run(message, Id):
             for emoji in emojis[:len(row[5:])]:
                 await msg.add_reaction(emoji)
             try:
-                auto = await client.wait_for("message", check=AutoFalse, timeout=1.5)
+                await client.wait_for("message", check=AutoFalse, timeout=1.5)
             except:
                 pass
             for i, e in enumerate(emojis[:len(row[5:])]):
