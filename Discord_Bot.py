@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
 Created on Thu Nov 11 13:13:15 2021
-
 @author: derph
 """
 import discord
 from discord.ext import commands
 import nest_asyncio
+
 nest_asyncio.apply()
 import asyncio
 import string
@@ -16,7 +16,8 @@ import time
 import pymongo
 from pymongo import MongoClient
 import requests
-#import keep_alive
+
+# import keep_alive
 
 intents = discord.Intents.default()
 intents.reactions = True
@@ -38,8 +39,11 @@ botname = tokenIn.readline().rstrip()
 @client.event
 async def on_ready():
     print("Bot is Ready")
-    await client.change_presence(activity=discord.Game("+help for more info"))    
+    await client.change_presence(activity=discord.Game("+help for more info"))
 
+
+def AutoFalse(message):
+    return False
 
 @client.command()
 async def run(message, Id):
@@ -47,8 +51,9 @@ async def run(message, Id):
     MessageMan = True
     if channel.id in client.players.keys():
         await channel.send(
-            embed=discord.Embed(title="Quiz already running in this channel! Please allow it to finish or use a different channel.",
-                                color=discord.Colour.red()))
+            embed=discord.Embed(
+                title="Quiz already running in this channel! Please allow it to finish or use a different channel.",
+                color=discord.Colour.red()))
         return
     client.players[channel.id] = {}
     try:
@@ -57,7 +62,7 @@ async def run(message, Id):
             if doc["name"] != str(message.author.id):
                 client.players.pop(channel.id)
                 await channel.send(
-                embed=discord.Embed(title="You are not authorized to run this quiz", colour=discord.Colour.red()))
+                    embed=discord.Embed(title="You are not authorized to run this quiz", colour=discord.Colour.red()))
                 return
         questions = doc["questions"]
         answer_dict = {'🇦': "A", '🇧': "B", '🇨': "C", '🇩': "D",
@@ -69,19 +74,21 @@ async def run(message, Id):
                                 color=discord.Colour.blue()))
         InvMsg = await channel.history().find(lambda m: str(m.author.id) == botname)
         await InvMsg.add_reaction("✔️")
+
+
         def FalseReaction(rxn, user):
             message = rxn.message
             channel = message.channel
-            if rxn.emoji == "✔️" and str(user.id) != botname and str(message.author.id) == botname and InvMsg == message:
+            if rxn.emoji == "✔️" and str(user.id) != botname and str(
+                    message.author.id) == botname and InvMsg == message:
                 client.players[channel.id][user.name] = 0
             return False
-        def AutoFalse(message):
-            return False
-        try:    
+
+        try:
             Adding = await client.wait_for("reaction_add", check=FalseReaction, timeout=10)
         except:
             pass
-        InvMsg = await channel.history().find(lambda m: m.id ==  InvMsg.id)
+        InvMsg = await channel.history().find(lambda m: m.id == InvMsg.id)
         if InvMsg.reactions[0].count <= 1:
             client.players.pop(channel.id)
             await channel.send(
@@ -106,7 +113,7 @@ async def run(message, Id):
                 return False
 
         setting = None
-        try:           
+        try:
             setting = await client.wait_for("reaction_add", check=setCheck, timeout=20)
         except:
             try:
@@ -114,7 +121,8 @@ async def run(message, Id):
                 await OptMsg.clear_reaction("🇧")
             except:
                 pass
-            await OptMsg.edit(embed=discord.Embed(title="No response given. Ending the quiz.", colour=discord.Colour.red()))
+            await OptMsg.edit(
+                embed=discord.Embed(title="No response given. Ending the quiz.", colour=discord.Colour.red()))
             client.players.pop(channel.id)
             return
         try:
@@ -127,13 +135,14 @@ async def run(message, Id):
         else:
             await OptMsg.edit(
                 embed=discord.Embed(title="You are playing with score deductions", color=discord.Colour.blue()))
-        
+
         await channel.send(embed=discord.Embed(
             title="Would you like questions to be randomized?",
             color=discord.Colour.blue()))
         RandQ = await channel.history().find(lambda m: str(m.author.id) == botname)
         await RandQ.add_reaction("✔️")
         await RandQ.add_reaction("❌")
+
         # Function for checking for reaction given
         def randCheck(rxn, user):
             if rxn.emoji in ["✔️", "❌"] and user.name in client.players[channel.id].keys():
@@ -145,6 +154,7 @@ async def run(message, Id):
                 return True
             else:
                 return False
+
         setting = None
         try:
             setting = await client.wait_for("reaction_add", check=randCheck, timeout=20)
@@ -152,7 +162,8 @@ async def run(message, Id):
             if MessageMan:
                 await RandQ.clear_reaction("✔️")
                 await RandQ.clear_reaction("❌")
-            await RandQ.edit(embed=discord.Embed(title="No response given. Ending the quiz.", colour=discord.Colour.red()))
+            await RandQ.edit(
+                embed=discord.Embed(title="No response given. Ending the quiz.", colour=discord.Colour.red()))
             client.players.pop(channel.id)
             return
         if MessageMan:
@@ -163,14 +174,17 @@ async def run(message, Id):
         else:
             await RandQ.edit(
                 embed=discord.Embed(title="Question order maintained", color=discord.Colour.blue()))
-        
-        await channel.send(embed=discord.Embed(title="Starting! Remember to wait for answers to show up before responding.", color=discord.Colour.green()))
+
+        await channel.send(
+            embed=discord.Embed(title="Starting! Remember to wait for answers to show up before responding.",
+                                color=discord.Colour.green()))
         Qnum = 1
         for iteration, row in enumerate(questions):
             if len(list(client.players[channel.id].keys())) == 1 and client.elimination:
                 await channel.send(
-                    embed=discord.Embed(title=list(client.players[channel.id].keys())[0] + " wins for being the last survivor!",
-                                        color=discord.Colour.blue()))
+                    embed=discord.Embed(
+                        title=list(client.players[channel.id].keys())[0] + " wins for being the last survivor!",
+                        color=discord.Colour.blue()))
                 podium = discord.Embed(
                     title="Final Podium",
 
@@ -218,6 +232,7 @@ async def run(message, Id):
                 embed.add_field(name=e, value=row[5 + i])
             embed.set_footer(text="You have " + row[4] + " seconds")
             await msg.edit(embed=embed)
+
             def check(rxn, user):
                 message = rxn.message
                 if len(message.embeds) == 0:
@@ -226,6 +241,7 @@ async def run(message, Id):
                     return True
                 else:
                     return False
+
             answer = "Fail"
             t0 = time.perf_counter()
             try:
@@ -251,7 +267,8 @@ async def run(message, Id):
                     else:
                         client.players[channel.id][answer[1].name] -= int(round(pts, 0))
                         await channel.send(answer[1].name + " will lose " + str(int(round(pts, 0))) + " points!")
-            client.players[channel.id] = dict(sorted(client.players[channel.id].items(), key=lambda kv: kv[1], reverse=True))
+            client.players[channel.id] = dict(
+                sorted(client.players[channel.id].items(), key=lambda kv: kv[1], reverse=True))
             rankings = discord.Embed(
                 title="Rankings",
 
@@ -259,7 +276,8 @@ async def run(message, Id):
             )
             rank = 1
             for player in client.players[channel.id].keys():
-                rankings.add_field(name=str(rank) + ". " + player, value=str(client.players[channel.id][player]) + " point",
+                rankings.add_field(name=str(rank) + ". " + player,
+                                   value=str(client.players[channel.id][player]) + " point",
                                    inline=False)
                 rank += 1
             await channel.send(embed=rankings)
@@ -282,10 +300,12 @@ async def run(message, Id):
                 client.players.pop(channel.id)
                 break
     except:
-        if channel.id in client.players.keys():
+        print(e)
+        if client.players.get(channel.id):
             client.players.pop(channel.id)
-        await channel.send(embed = discord.Embed(title="Invalid Quiz Code Given or Invalid Quiz Set",
-                                                 color = discord.Colour.red()))
+        await channel.send(embed=discord.Embed(title="Invalid Quiz Code Given or Invalid Quiz Set",
+                                               color=discord.Colour.red()))
+
 
 # creates a 4 letter id and checks if it is unique. If not, reiterates. Returns unique id.
 
@@ -298,6 +318,7 @@ def quizcodemaker(col):
             quizcodemaker(col)
     return filename
 
+
 @client.command()
 async def upload(ctx):
     author = ctx.author
@@ -305,21 +326,21 @@ async def upload(ctx):
     quiz = ""
 
     await ctx.send("Please upload your .CSV file.")
-    
+
     def check(message):
         return message.author == ctx.author and message.attachments[0].filename.endswith('.csv')
-    
+
     try:
         message = await client.wait_for('message', timeout=25.0, check=check)
         file = message.attachments
         unique_quizcode = quizcodemaker(client.quiz)
-    
+
         if len(file) > 0 and file[0].filename.endswith('.csv'):
             quiz = requests.get(file[0].url).content.decode("utf-8")
             quiz = quiz.split("\n")
             quiz = list(csv.reader(quiz))
             EmbedList = []
-    
+
             # checks if you used the template
             templatecheck = "Question No.,Question,Image URL,Answer (letter),Time,A,B,C,D,E,F,G,H,I,J"
             if templatecheck not in ",".join(quiz[5]):
@@ -327,7 +348,7 @@ async def upload(ctx):
                     title="Invalid .csv format! Please follow the template and follow the instructions listed. You can find the quiz template at https://docs.google.com/spreadsheets/d/1H1Fg5Lw1hNMRFWkorHuAehRodlmHgKFM8unDjPZMnUg/edit#gid=196296521",
                     colour=discord.Colour.red()))
                 return
-            
+
             Qnum = 1
             for row in quiz[6:]:
                 if set(list(row)) == {''}:
@@ -345,7 +366,7 @@ async def upload(ctx):
                 embed = discord.Embed(
                     title="Question " + row[0],
                     description=row[1],
-    
+
                     colour=discord.Colour.blue()
                 )
                 if row[2] != "None":
@@ -366,7 +387,7 @@ async def upload(ctx):
                         row[5 + i] = "True"
                     elif row[5 + i] == "FALSE":
                         row[5 + i] = "False"
-    
+
                     # checks if you have a correct answer choice
                     validanswerchoice = False
                     if row[3].islower():
@@ -385,18 +406,18 @@ async def upload(ctx):
                         embed.add_field(name=e, value=row[5 + i] + " (answer)")
                     else:
                         embed.add_field(name=e, value=row[5 + i])
-    
+
                     # checks if time is valid
-    
+
                     if not row[4].isdigit():
                         await channel.send(
                             "Question " + row[0] + " does not have a valid time! (\"" + row[
                                 4] + "\")")
                         return
-    
+
                 embed.set_footer(text="You have " + row[4] + " seconds")
                 EmbedList.append(embed)
-    
+
             j = 0
             await channel.send(embed=EmbedList[j])
             embed = await channel.history().find(lambda m: str(m.author.id) == botname)
@@ -409,21 +430,24 @@ async def upload(ctx):
                     colour=discord.Colour.dark_magenta()))
             msg = await channel.history().find(lambda m: str(m.author.id) == botname)
             doneChecking = False
-    
+
+
+
             def checkdirection(reaction, user):
                 return (user == message.author and (str(reaction.emoji) == '✔️' or str(
                     reaction.emoji) == '⬅️' or str(
-                    reaction.emoji) == '➡️')) and reaction.message == embed        
-    
+                    reaction.emoji) == '➡️')) and reaction.message == embed
+
             def checkRemoveDirection(payload):
                 guild = client.get_guild(payload.guild_id)
                 reaction = payload.emoji.name
                 return (payload.user_id == ctx.author.id and (str(reaction) == '✔️' or str(
                     reaction) == '⬅️' or str(
                     reaction) == '➡️')) and payload.message_id == embed.id
-                        
+
             while not doneChecking:
-                pending_tasks = [client.wait_for('raw_reaction_remove',check=checkRemoveDirection), client.wait_for('reaction_add',check=checkdirection)]
+                pending_tasks = [client.wait_for('raw_reaction_remove', check=checkRemoveDirection),
+                                 client.wait_for('reaction_add', check=checkdirection)]
                 done_tasks, pending_tasks = await asyncio.wait(pending_tasks, return_when=asyncio.FIRST_COMPLETED)
                 quizCheck = None
                 for task in done_tasks:
@@ -459,20 +483,20 @@ async def upload(ctx):
             embed=discord.Embed(title="Is this the quiz set you wish to create?", colour=discord.Colour.purple()))
         await msg.add_reaction("✔️")
         await msg.add_reaction("❌")
-    
+
         def checkanswer(reaction, user):
             return user.id == message.author.id and (str(reaction.emoji) == '✔️' or str(reaction.emoji) == '❌')
-    
+
         try:
             userAnswer = await client.wait_for('reaction_add', timeout=20.0, check=checkanswer)
             if userAnswer[0].emoji == "✔️":
                 privacySetting = "public"
                 quizname = quiz[2][0]
-    
-                try:            
+
+                try:
                     await msg.clear_reaction("✔️")
                     await msg.clear_reaction("❌")
-    
+
                     await msg.edit(embed=discord.Embed(
                         title="This quiz set is currently set as public. Would you like it private?",
                         colour=discord.Colour.green()))
@@ -481,11 +505,11 @@ async def upload(ctx):
                         title="This quiz set is currently set as public. Would you like it private?",
                         colour=discord.Colour.green()))
                     msg = await channel.history().find(lambda m: str(m.author.id) == botname)
-    
+
                 await msg.add_reaction("✔️")
                 await msg.add_reaction("❌")
                 try:
-    
+
                     privacy = await client.wait_for("reaction_add", timeout=20.0, check=checkanswer)
                     if privacy[0].emoji == "✔️":
                         privacySetting = "private"
@@ -505,7 +529,7 @@ async def upload(ctx):
                 try:
                     await msg.clear_reaction("✔️")
                     await msg.clear_reaction("❌")
-    
+
                     await msg.edit(embed=discord.Embed(
                         title="Okay, your quiz set will be " + privacySetting + ". Your current quiz name is **\"" + quizname + "\"**. Would you like to change it?",
                         colour=discord.Colour.red()))
@@ -514,19 +538,19 @@ async def upload(ctx):
                         title="Okay, your quiz set will be " + privacySetting + ". Your current quiz name is **\"" + quizname + "\"**. Would you like to change it?",
                         colour=discord.Colour.red()))
                     msg = await channel.history().find(lambda m: str(m.author.id) == botname)
-                
+
                 await msg.add_reaction("✔️")
                 await msg.add_reaction("❌")
-    
-                #creates quiz and uploads it into the database
+
+                # creates quiz and uploads it into the database
                 def createquiz():
-                    x = client.quiz.update_one({"_id": "Key"},
+                    client.quiz.update_one({"_id": "Key"},
                                                {'$addToSet': {"Codes": unique_quizcode}})
-    
+
                     client.quiz.insert_one(
                         {"_id": unique_quizcode, "name": str(author.id), "quizName": quizname,
                          "questions": [], "privacy": privacySetting})
-    
+
                     quiz = requests.get(file[0].url).content.decode("utf-8")
                     quiz = quiz.split("\n")
                     quiz = list(csv.reader(quiz))
@@ -534,9 +558,9 @@ async def upload(ctx):
                         if set(list(row)) == {''}:
                             continue
                         y = 'ȟ̵̢̨̤͕̔͊̓͒ͅ'.join(row)
-                        x = client.quiz.update_one({"_id": unique_quizcode},
+                        client.quiz.update_one({"_id": unique_quizcode},
                                                    {'$addToSet': {"questions": y}})
-    
+
                 try:
                     changeName = await client.wait_for('reaction_add', timeout=20.0, check=checkanswer)
                     if changeName[0].emoji == "✔️":
@@ -545,7 +569,7 @@ async def upload(ctx):
                             try:
                                 await msg.clear_reaction("✔️")
                                 await msg.clear_reaction("❌")
-                                
+
                                 await msg.edit(embed=discord.Embed(
                                     title="Please type what you would like to name your quiz.",
                                     colour=discord.Colour.orange()))
@@ -554,17 +578,17 @@ async def upload(ctx):
                                     title="Please type what you would like to name your quiz.",
                                     colour=discord.Colour.orange()))
                                 msg = await channel.history().find(lambda m: str(m.author.id) == botname)
-                                
+
                             def checkName(message):
                                 return message.channel == ctx.channel and message.author == ctx.author
-    
+
                             try:
                                 desiredName = await client.wait_for("message", timeout=20.0, check=checkName)
-                                
+
                                 try:
                                     await msg.clear_reaction("✔️")
                                     await msg.clear_reaction("❌")
-    
+
                                     await msg.edit(embed=discord.Embed(
                                         title="Your quiz's name is currently **\"" + desiredName.content + "\"**. Is this correct?",
                                         colour=discord.Colour.purple()))
@@ -573,25 +597,25 @@ async def upload(ctx):
                                         title="Your quiz's name is currently **\"" + desiredName.content + "\"**. Is this correct?",
                                         colour=discord.Colour.purple()))
                                     msg = await channel.history().find(lambda m: str(m.author.id) == botname)
-                                    
+
                                 await msg.add_reaction("✔️")
                                 await msg.add_reaction("❌")
-    
+
                                 try:
                                     nameConfirmation = await client.wait_for("reaction_add", timeout=20.0,
                                                                              check=checkanswer)
                                     if nameConfirmation[0].emoji == "✔️":
                                         nameDesired = True
                                         quizname = desiredName.content
-    
+
                                         createquiz()
-                                        
+
                                         try:
                                             await msg.clear_reaction("✔️")
                                             await msg.clear_reaction("❌")
                                         except:
                                             pass
-                                        
+
                                         if privacySetting == "public":
                                             await msg.edit(embed=discord.Embed(
                                                 title="Success! Your quiz set ID is " + unique_quizcode,
@@ -605,7 +629,7 @@ async def upload(ctx):
                                                 colour=discord.Colour.green()))
                                     elif nameConfirmation[0].emoji == "❌":
                                         continue
-    
+
                                 except asyncio.TimeoutError:
                                     try:
                                         await msg.clear_reaction("✔️")
@@ -616,32 +640,32 @@ async def upload(ctx):
                                         title="You timed out!",
                                         colour=discord.Colour.red()))
                                     return
-    
+
                             except asyncio.TimeoutError:
                                 await msg.edit(embed=discord.Embed(
                                     title="You timed out!",
                                     colour=discord.Colour.red()))
                                 return
-    
+
                     elif changeName[0].emoji == "❌":
-    
+
                         createquiz()
-    
-                        try:                    
+
+                        try:
                             await msg.clear_reaction("✔️")
                             await msg.clear_reaction("❌")
                         except:
                             pass
-    
+
                         if privacySetting == "public":
                             await msg.edit(embed=discord.Embed(
-                                    title="Success! Your quiz set ID is " + unique_quizcode,
-                                    colour=discord.Colour.green()))
+                                title="Success! Your quiz set ID is " + unique_quizcode,
+                                colour=discord.Colour.green()))
                         elif privacySetting == "private":
                             await author.send(embed=discord.Embed(
-                                                title="Success! Your private quiz set ID is " + unique_quizcode,
-                                                colour=discord.Colour.green()))
-    
+                                title="Success! Your private quiz set ID is " + unique_quizcode,
+                                colour=discord.Colour.green()))
+
                 except asyncio.TimeoutError:
                     try:
                         await msg.clear_reaction("✔️")
@@ -652,7 +676,7 @@ async def upload(ctx):
                         title="You timed out!",
                         colour=discord.Colour.red()))
                     return
-    
+
             elif userAnswer[0].emoji == "❌":
                 try:
                     await msg.clear_reaction("✔️")
@@ -663,7 +687,7 @@ async def upload(ctx):
                     title="Got it. This quiz set won't be created.",
                     colour=discord.Colour.red()))
                 return
-    
+
         except asyncio.TimeoutError:
             try:
                 await msg.clear_reaction("✔️")
@@ -674,14 +698,13 @@ async def upload(ctx):
                 title="You timed out!",
                 colour=discord.Colour.red()))
             return
-    
+
     except asyncio.TimeoutError:
         await ctx.channel.send("You timed out!")
-        return    
+        return
 
     except:
         await ctx.channel.send("There was an issue reading your .csv file. Please retry the command.")
-
 
 
 @client.command()
@@ -700,7 +723,7 @@ async def myQuiz(ctx):
         if doc["privacy"] == "private":
             privacySetting = " (private)"
         code = doc["_id"]
-        name = doc["quizName"] + privacySetting 
+        name = doc["quizName"] + privacySetting
         embed.add_field(name=code, value=name, inline=False)
     await author.send(embed=embed)
 
@@ -750,12 +773,14 @@ async def delete(ctx, quizcode):
                     embed.add_field(name=e, value=row[5 + i])
             embed.set_footer(text="You have " + row[4] + " seconds")
             EmbedList.append(embed)
-        
+
         j = 0
         await channel.send(embed=EmbedList[j])
         msg = await channel.history().find(lambda m: str(m.author.id) == botname)
         await channel.send(
-            embed=discord.Embed(title="Verify that this is the correct quiz. Navigate using the arrow keys and click the check mark when you're done checking.", colour=discord.Colour.light_gray()))
+            embed=discord.Embed(
+                title="Verify that this is the correct quiz. Navigate using the arrow keys and click the check mark when you're done checking.",
+                colour=discord.Colour.light_gray()))
         await msg.add_reaction("⬅️")
         await msg.add_reaction("➡️")
         await msg.add_reaction("✔️")
@@ -763,19 +788,20 @@ async def delete(ctx, quizcode):
         def checkdirection(reaction, user):
             return user == ctx.author and (str(reaction.emoji) == '✔️' or str(reaction.emoji) == '⬅️' or str(
                 reaction.emoji) == '➡️')
-        
+
         def checkRemoveDirection(payload):
             guild = client.get_guild(payload.guild_id)
             channel = guild.get_channel(payload.channel_id)
             reaction = payload.emoji.name
             return (payload.user_id == ctx.author.id and (str(reaction) == '✔️' or str(
                 reaction) == '⬅️' or str(
-                reaction) == '➡️')) and msg.id == payload.message_id        
+                reaction) == '➡️')) and msg.id == payload.message_id
 
         doneChecking = False
 
         while not doneChecking:
-            pending_tasks = [client.wait_for('raw_reaction_remove',check=checkRemoveDirection), client.wait_for('reaction_add',check=checkdirection)]
+            pending_tasks = [client.wait_for('raw_reaction_remove', check=checkRemoveDirection),
+                             client.wait_for('reaction_add', check=checkdirection)]
             done_tasks, pending_tasks = await asyncio.wait(pending_tasks, return_when=asyncio.FIRST_COMPLETED)
             quizCheck = None
             for task in done_tasks:
@@ -806,11 +832,12 @@ async def delete(ctx, quizcode):
                     await msg.edit(embed=EmbedList[j])
                 if quizCheck.emoji.name == "✔️":
                     doneChecking = True
-        await msg.delete()        
+        await msg.delete()
         msg = await channel.history().find(lambda m: str(m.author.id) == botname)
-        await msg.edit(embed=discord.Embed(title="Is this the quiz set you wish to delete?", colour=discord.Colour.orange()))
+        await msg.edit(
+            embed=discord.Embed(title="Is this the quiz set you wish to delete?", colour=discord.Colour.orange()))
         await msg.add_reaction("✔️")
-        await msg.add_reaction("❌")        
+        await msg.add_reaction("❌")
 
         def checkanswer(reaction, user):
             return user == ctx.author and (str(reaction.emoji) == '✔️' or str(reaction.emoji) == '❌')
@@ -870,14 +897,17 @@ async def help(ctx):
     )
     uploadCSV = "This command lets you begin the process of uploading a quiz csv to the database. \n You can find the quiz template at https://docs.google.com/spreadsheets/d/1H1Fg5Lw1hNMRFWkorHuAehRodlmHgKFM8unDjPZMnUg/edit#gid=196296521"
     embed.add_field(name="+upload", value=uploadCSV, inline=False)
-    embed.add_field(name="+myQuiz", value="Direct messages you the keys and names of the quizzes you uploaded", inline=False)
+    embed.add_field(name="+myQuiz", value="Direct messages you the keys and names of the quizzes you uploaded",
+                    inline=False)
     run = "This command searches our database for a quiz of key QUIZKEY.  If QUIZKEY is valid, it will start the quiz."
     embed.add_field(name="+run QUIZKEY", value=run, inline=False)
     embed.add_field(name="+delete QUIZKEY", value="Asks you for confirmation then deletes this QUIZKEY from your bot.")
     embed.add_field(name="+edit QUIZKEY", value="Allows you to edit quizzes that you have created.")
     embed.add_field(name="Bot Invitation Link", value="https://bit.ly/2LsMwi6")
-    embed.add_field(name="Note:", value="Enabling the bot to manage messages, while not strictly required, helps prevent the bot from cluttering your channel history to provide you a more optimized experience.  Every other permission, however, is needed.")
-    embed.add_field(name="Another Note:", value="Only the run, delete, and edit commands require an argument to run properly.  Everything else can be run directly.")
+    embed.add_field(name="Note:",
+                    value="Enabling the bot to manage messages, while not strictly required, helps prevent the bot from cluttering your channel history to provide you a more optimized experience.  Every other permission, however, is needed.")
+    embed.add_field(name="Another Note:",
+                    value="Only the run, delete, and edit commands require an argument to run properly.  Everything else can be run directly.")
     await channel.send(embed=embed)
 
 
@@ -903,7 +933,7 @@ async def edit(ctx, quizKey):
 
         def setCheck(reaction, user):
             return user == ctx.author and (
-                        str(reaction.emoji) == '✔️' or str(reaction.emoji) == '❌') and reaction.message == msg
+                    str(reaction.emoji) == '✔️' or str(reaction.emoji) == '❌') and reaction.message == msg
 
         try:
             setting = await client.wait_for("reaction_add", timeout=10.0, check=setCheck)
@@ -915,16 +945,18 @@ async def edit(ctx, quizKey):
             try:
                 await msg.clear_reaction("✔️")
                 await msg.clear_reaction("❌")
-            except: 
+            except:
                 MessageMan = False
-                
+
             if setting[0].emoji == "❌":
                 if MessageMan:
-                    await msg.edit(embed=discord.Embed(description="Would you like to switch this quiz to " + private + "?",
-                                                       color=discord.Colour.blue()))
+                    await msg.edit(
+                        embed=discord.Embed(description="Would you like to switch this quiz to " + private + "?",
+                                            color=discord.Colour.blue()))
                 else:
-                    await channel.send(embed=discord.Embed(description="Would you like to switch this quiz to " + private + "?",
-                                                       color=discord.Colour.blue()))
+                    await channel.send(
+                        embed=discord.Embed(description="Would you like to switch this quiz to " + private + "?",
+                                            color=discord.Colour.blue()))
                     msg = await channel.history().find(lambda m: str(m.author.id) == botname)
                 await msg.add_reaction("✔️")
                 await msg.add_reaction("❌")
@@ -934,7 +966,7 @@ async def edit(ctx, quizKey):
                         await msg.clear_reaction("✔️")
                         await msg.clear_reaction("❌")
                     if setting[0].emoji == "✔️":
-                        x = client.quiz.update_one({"_id": quizKey},
+                        client.quiz.update_one({"_id": quizKey},
                                                    {"$set": {"privacy": private}})
                         await msg.edit(embed=discord.Embed(description="Alright! Changed privacy to " + private + "!",
                                                            color=discord.Colour.green()))
@@ -958,8 +990,8 @@ async def edit(ctx, quizKey):
             except:
                 pass
             await msg.edit(embed=discord.Embed(
-                    title="You timed out!",
-                    colour=discord.Colour.red()))
+                title="You timed out!",
+                colour=discord.Colour.red()))
             return
         question = discord.Embed(title="The quiz's name is " + doc["quizName"],
                                  description="Would you like to keep this?",
@@ -994,7 +1026,8 @@ async def edit(ctx, quizKey):
                             embed=discord.Embed(description="Would you like to set the quiz name to " + name + "?",
                                                 color=discord.Colour.blue()))
                     else:
-                        await channel.send(embed=discord.Embed(description="Would you like to set the quiz name to " + name + "?",
+                        await channel.send(
+                            embed=discord.Embed(description="Would you like to set the quiz name to " + name + "?",
                                                 color=discord.Colour.blue()))
                         msg = await channel.history().find(lambda m: str(m.author.id) == botname)
                     await msg.add_reaction("✔️")
@@ -1005,7 +1038,7 @@ async def edit(ctx, quizKey):
                             await msg.clear_reaction("✔️")
                             await msg.clear_reaction("❌")
                         if rxn[0].emoji == "✔️":
-                            x = client.quiz.update_one({"_id": quizKey},
+                            client.quiz.update_one({"_id": quizKey},
                                                        {"$set": {"quizName": name}})
                             await msg.edit(embed=discord.Embed(description="Alright changed name to " + name + "!",
                                                                color=discord.Colour.green()))
@@ -1072,7 +1105,7 @@ async def edit(ctx, quizKey):
                     embed.add_field(name=e, value=row[5 + i])
             embed.set_footer(text="You have " + row[4] + " seconds")
             EmbedList.append(embed)
-        
+
         j = 0
         await channel.send(embed=EmbedList[j])
         msg = await channel.history().find(lambda m: str(m.author.id) == botname)
@@ -1083,6 +1116,7 @@ async def edit(ctx, quizKey):
         await msg.add_reaction("⬅️")
         await msg.add_reaction("➡️")
         await msg.add_reaction("✔️")
+
 
         def checkdirection(reaction, user):
             return user == ctx.author and (str(reaction.emoji) == '✔️' or str(reaction.emoji) == '⬅️' or str(
@@ -1095,11 +1129,12 @@ async def edit(ctx, quizKey):
             return (payload.user_id == ctx.author.id and (str(reaction) == '✔️' or str(
                 reaction) == '⬅️' or str(
                 reaction) == '➡️')) and payload.message_id == msg.id
-    
+
         doneChecking = False
 
         while not doneChecking:
-            pending_tasks = [client.wait_for('raw_reaction_remove',check=checkRemoveDirection), client.wait_for('reaction_add',check=checkdirection)]
+            pending_tasks = [client.wait_for('raw_reaction_remove', check=checkRemoveDirection),
+                             client.wait_for('reaction_add', check=checkdirection)]
             done_tasks, pending_tasks = await asyncio.wait(pending_tasks, return_when=asyncio.FIRST_COMPLETED)
             quizCheck = None
             for task in done_tasks:
@@ -1147,6 +1182,7 @@ async def edit(ctx, quizKey):
 
                 def check(message):
                     return message.author == ctx.author and message.attachments[0].filename.endswith('.csv')
+
                 try:
                     message = await client.wait_for('message', timeout=15.0, check=check)
                     await msg.delete()
@@ -1251,10 +1287,12 @@ async def edit(ctx, quizKey):
                             return (payload.user_id == ctx.author.id and (str(reaction) == '✔️' or str(
                                 reaction) == '⬅️' or str(
                                 reaction) == '➡️')) and payload.message_id == embed.id
-                                    
+
                         while not doneChecking:
-                            pending_tasks = [client.wait_for('raw_reaction_remove',check=NcheckRemoveDirection), client.wait_for('reaction_add',check=Ncheckdirection)]
-                            done_tasks, pending_tasks = await asyncio.wait(pending_tasks, return_when=asyncio.FIRST_COMPLETED)
+                            pending_tasks = [client.wait_for('raw_reaction_remove', check=NcheckRemoveDirection),
+                                             client.wait_for('reaction_add', check=Ncheckdirection)]
+                            done_tasks, pending_tasks = await asyncio.wait(pending_tasks,
+                                                                           return_when=asyncio.FIRST_COMPLETED)
                             quizCheck = None
                             for task in done_tasks:
                                 quizCheck = await task
@@ -1301,13 +1339,13 @@ async def edit(ctx, quizKey):
                             quiz = requests.get(file[0].url).content.decode("utf-8")
                             quiz = quiz.split("\n")
                             quiz = list(csv.reader(quiz))
-                            x = client.quiz.update_one({"_id": quizKey},
+                            client.quiz.update_one({"_id": quizKey},
                                                        {'$set': {"questions": []}})
                             for row in quiz[6:]:
                                 if set(list(row)) == {''}:
                                     continue
                                 y = 'ȟ̵̢̨̤͕̔͊̓͒ͅ'.join(row)
-                                x = client.quiz.update_one({"_id": quizKey},
+                                client.quiz.update_one({"_id": quizKey},
                                                            {'$addToSet': {"questions": y}})
                             await msg.edit(embed=discord.Embed(description="Questions have been successfully updated",
                                                                colour=discord.Colour.green()))
@@ -1341,5 +1379,5 @@ async def edit(ctx, quizKey):
             embed=discord.Embed(title="Invalid code or input entered!", colour=discord.Colour.red()))
 
 
-#keep_alive.keep_alive()
+# keep_alive.keep_alive()
 client.run(token)
