@@ -282,8 +282,8 @@ async def run(message, Id):
                 rank += 1
             await channel.send(embed=rankings)
             try:
-                auto = await client.wait_for("message", check=AutoFalse, timeout=1.5)
-            except:
+                await client.wait_for("message", check=AutoFalse, timeout=1.5)
+            except Exception as e:
                 pass
             if iteration == len(questions) - 1:
                 Final = discord.Embed(
@@ -299,7 +299,7 @@ async def run(message, Id):
                 await channel.send(embed=Final)
                 client.players.pop(channel.id)
                 break
-    except:
+    except Exception as e:
         print(e)
         if client.players.get(channel.id):
             client.players.pop(channel.id)
