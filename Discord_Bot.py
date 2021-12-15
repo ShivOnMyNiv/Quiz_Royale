@@ -4,10 +4,10 @@ Created on Thu Nov 11 13:13:15 2021
 
 @author: derph
 """
-import nest_asyncio
-nest_asyncio.apply()
 import discord
 from discord.ext import commands
+import nest_asyncio
+nest_asyncio.apply()
 import asyncio
 import string
 import random
@@ -16,7 +16,7 @@ import time
 import pymongo
 from pymongo import MongoClient
 import requests
-import keep_alive
+#import keep_alive
 
 intents = discord.Intents.default()
 intents.reactions = True
@@ -192,9 +192,6 @@ async def run(message, Id):
             row[0] = str(Qnum)
             Qnum += 1
 
-            def equation(x):
-                return 300 - 300 * (x / (int(row[4]) / 1.5)) ** 2
-
             embed = discord.Embed(
                 title="Question " + row[0],
                 description=row[1],
@@ -238,7 +235,8 @@ async def run(message, Id):
             if type(answer) != str:
                 t1 = time.perf_counter()
                 times = t1 - t0
-                pts = equation(times)
+
+                pts = 300 - 300 * (times / (int(row[4]) / 1.5)) ** 2
                 if pts < 10:
                     pts = 10
                 if answer[0].emoji in answer_dict.keys() and answer_dict[answer[0].emoji] == row[3]:
@@ -289,6 +287,16 @@ async def run(message, Id):
         await channel.send(embed = discord.Embed(title="Invalid Quiz Code Given or Invalid Quiz Set",
                                                  color = discord.Colour.red()))
 
+# creates a 4 letter id and checks if it is unique. If not, reiterates. Returns unique id.
+
+def quizcodemaker(col):
+    filename = ''.join(random.choice(string.ascii_uppercase) for i in range(4))
+    doc = col.find_one({"_id": "Key"})
+    codes = doc["Codes"]
+    for row in codes:
+        if filename in row:
+            quizcodemaker(col)
+    return filename
 
 @client.command()
 async def upload(ctx):
@@ -300,17 +308,6 @@ async def upload(ctx):
     
     def check(message):
         return message.author == ctx.author and message.attachments[0].filename.endswith('.csv')
-    
-    # creates a 4 letter id and checks if it is unique. If not, reiterates. Returns unique id.
-    
-    def quizcodemaker(col):
-        filename = ''.join(random.choice(string.ascii_uppercase) for i in range(4))
-        doc = col.find_one({"_id": "Key"})
-        codes = doc["Codes"]
-        for row in codes:
-            if filename in row:
-                quizcodemaker()
-        return filename
     
     try:
         message = await client.wait_for('message', timeout=25.0, check=check)
@@ -1344,5 +1341,5 @@ async def edit(ctx, quizKey):
             embed=discord.Embed(title="Invalid code or input entered!", colour=discord.Colour.red()))
 
 
-keep_alive.keep_alive()
+#keep_alive.keep_alive()
 client.run(token)
