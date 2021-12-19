@@ -16,6 +16,7 @@ import pymongo
 from pymongo import MongoClient
 import requests
 import keep_alive
+import urllib
 
 
 intents = discord.Intents.default()
@@ -27,7 +28,6 @@ token = tokenIn.readline().rstrip()
 client = commands.Bot(command_prefix='+')
 client.remove_command('help')
 mongo = MongoClient(tokenIn.readline().rstrip())
-db = mongo["quizInfo"]
 client.quiz = mongo.quizInfo.quizinfos
 client.elimination = None
 client.shuffle = None
@@ -39,8 +39,6 @@ botname = tokenIn.readline().rstrip()
 async def on_ready():
     print("Bot is Ready")
     await client.change_presence(activity=discord.Game("+help for more info"))
-
-
 
 
 @client.command()
@@ -307,7 +305,6 @@ async def run(message, Id):
 
 
 # creates a 4 letter id and checks if it is unique. If not, reiterates. Returns unique id.
-
 def quizcodemaker(col):
     filename = ''.join(random.choice(string.ascii_uppercase) for i in range(4))
     doc = col.find_one({"_id": "Key"})
