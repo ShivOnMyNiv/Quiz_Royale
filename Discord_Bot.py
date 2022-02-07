@@ -3,11 +3,13 @@
 Created on Thu Nov 11 13:13:15 2021
 @author: derph
 """
-import discord
+
 import nest_asyncio
+nest_asyncio.apply()
+
+import discord
 from discord.ext import commands
 
-nest_asyncio.apply()
 import asyncio
 import string
 import random
@@ -37,6 +39,7 @@ ANSWERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
 emojis = ['🇦', '🇧', '🇨', '🇩', '🇪', '🇫', '🇬', '🇭', '🇮', '🇯']
 answer_dict = {'🇦': "A", '🇧': "B", '🇨': "C", '🇩': "D", '🇪': "E", '🇫': "F", '🇬': "G", '🇭': "F", '🇮': "I",
                '🇯': "J"}
+tokenIn.close()
 
 @client.event
 async def on_ready():
@@ -70,7 +73,7 @@ async def run(message, Id):
             embed=discord.Embed(title="You have 10 seconds to react to the reaction below and join the game.",
                                 color=discord.Colour.blue()))
 
-        while 1:
+        while True:            
             InvMsg = await channel.history(limit=msg_limit).find(lambda m: str(m.author.id) == botname)
             if InvMsg is not None:
                 break
@@ -85,9 +88,6 @@ async def run(message, Id):
                     message.author.id) == botname and InvMsg == message:
                 client.players[channel.id][user.name] = 0
             return False
-
-
-
 
         try:
             await client.wait_for("reaction_add", check=FalseReaction, timeout=10)
@@ -107,7 +107,7 @@ async def run(message, Id):
         await OptMsg.add_reaction("🇦")
         await OptMsg.add_reaction("🇧")
 
-        # MAKE IT SO THAT ONLY PEOPLE IN THE GAME CAN VOTE
+        # Ensures that only player in game can vote
         def setCheck(rxn, user):
             if rxn.emoji in ["🇦", "🇧"] and client.players[channel.id].get(user.name) is not None:
                 if rxn.emoji == "🇦":
