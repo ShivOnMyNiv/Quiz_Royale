@@ -41,6 +41,7 @@ answer_dict = {'🇦': "A", '🇧': "B", '🇨': "C", '🇩': "D", '🇪': "E", 
                '🇯': "J"}
 tokenIn.close()
 
+
 @client.event
 async def on_ready():
     print("Bot is Ready")
@@ -76,6 +77,8 @@ async def run(message, Id):
         while True:            
             InvMsg = await channel.history(limit=msg_limit).find(lambda m: str(m.author.id) == botname)
             if InvMsg is not None:
+                if msg_limit >= 20:
+                    msg_limit //= 3
                 break
             msg_limit += 5
 
@@ -93,7 +96,17 @@ async def run(message, Id):
             await client.wait_for("reaction_add", check=FalseReaction, timeout=10)
         except:
             pass
-        InvMsg = await channel.history().find(lambda m: m.id == InvMsg.id)
+
+        while 1:
+            InvMsg = await channel.history(limit=msg_limit).find(lambda m: m.id == InvMsg.id)
+            if InvMsg is not None:
+                if msg_limit >= 20:
+                    msg_limit //= 3
+                break
+            msg_limit += 5
+
+        #InvMsg = await channel.history().find(lambda m: m.id == InvMsg.id)
+
         if InvMsg.reactions[0].count <= 1:
             client.players.pop(channel.id)
             await channel.send(
@@ -103,7 +116,17 @@ async def run(message, Id):
             title="Press 🇦 to play by elimination (wrong answers get you kicked) or 🇧 to play by subtraction (wrong "
                   "answers lead to a score deduction).",
             color=discord.Colour.blue()))
-        OptMsg = await channel.history().find(lambda m: str(m.author.id) == botname)
+
+        while 1:
+            OptMsg = await channel.history(limit=msg_limit).find(lambda m: str(m.author.id) == botname)
+            if OptMsg is not None:
+                if msg_limit >= 20:
+                    msg_limit //= 3
+                break
+            msg_limit += 5
+
+        #OptMsg = await channel.history().find(lambda m: str(m.author.id) == botname)
+
         await OptMsg.add_reaction("🇦")
         await OptMsg.add_reaction("🇧")
 
@@ -144,7 +167,15 @@ async def run(message, Id):
         await channel.send(embed=discord.Embed(
             title="Would you like questions to be randomized?",
             color=discord.Colour.blue()))
-        RandQ = await channel.history().find(lambda m: str(m.author.id) == botname)
+
+        while 1:
+            RandQ = await channel.history(limit=msg_limit).find(lambda m: str(m.author.id) == botname)
+            if RandQ is not None:
+                break
+            msg_limit += 5
+
+        #RandQ = await channel.history().find(lambda m: str(m.author.id) == botname)
+
         await RandQ.add_reaction("✔️")
         await RandQ.add_reaction("❌")
 
@@ -183,18 +214,23 @@ async def run(message, Id):
             embed=discord.Embed(title="Starting! Remember to wait for answers to show up before responding.",
                                 color=discord.Colour.green()))
         Qnum = 1
+        winner = ""
         for iteration, row in enumerate(questions):
             if len(client.players[channel.id]) == 1 and client.elimination:
+
+                for i in client.players[channel.id].keys():
+                    winner = i
+
                 await channel.send(
                     embed=discord.Embed(
-                        title=list(client.players[channel.id])[0] + " wins for being the last survivor!",
+                        title=winner + " wins for being the last survivor!",
                         color=discord.Colour.blue()))
                 podium = discord.Embed(
                     title="Final Podium",
 
                     color=discord.Colour.gold()
                 )
-                podium.add_field(name="🥇", value=list(client.players[channel.id])[0], inline=False)
+                podium.add_field(name="🥇", value=winner, inline=False)
                 await channel.send(embed=podium)
                 client.players.pop(channel.id)
                 break
@@ -220,7 +256,17 @@ async def run(message, Id):
                 embed.set_image(url=row[2])
                 # await channel.send(row[2])
             await channel.send(embed=embed)
-            msg = await channel.history().find(lambda m: str(m.author.id) == botname)
+
+            while 1:
+                msg = await channel.history(limit=msg_limit).find(lambda m: str(m.author.id) == botname)
+                if msg is not None:
+                    if msg_limit >= 20:
+                        msg_limit //= 3
+                    break
+                msg_limit += 5
+
+            #msg = await channel.history().find(lambda m: str(m.author.id) == botname)
+
             for emoji in emojis[:len(row[5:])]:
                 await msg.add_reaction(emoji)
 
@@ -286,7 +332,6 @@ async def run(message, Id):
             await channel.send(embed=rankings)
             await asyncio.sleep(1.5)
 
-
             if iteration == len(questions) - 1:
                 Final = discord.Embed(
                     title="Final Podium",
@@ -295,7 +340,7 @@ async def run(message, Id):
                 )
                 rank = 1
                 medals = ["🥇", "🥈", "🥉"]
-                for player in list(client.players[channel.id].keys())[:3]:
+                for player in client.players[channel.id].keys()[:3]:
                     Final.add_field(name=medals[rank - 1], value=player, inline=False)
                     rank += 1
                 await channel.send(embed=Final)
@@ -322,6 +367,7 @@ def quizcodemaker(col):
 
 @client.command()
 async def upload(ctx):
+    msg_limit = 5
     author = ctx.author
     channel = ctx.channel
     quiz = ""
@@ -423,7 +469,16 @@ async def upload(ctx):
 
             j = 0
             await channel.send(embed=EmbedList[j])
-            embed = await channel.history().find(lambda m: str(m.author.id) == botname)
+
+            while 1:
+                embed = await channel.history(limit=msg_limit).find(lambda m: str(m.author.id) == botname)
+                if embed is not None:
+                    break
+                msg_limit += 5
+
+            #embed = await channel.history().find(lambda m: str(m.author.id) == botname)
+
+
             await embed.add_reaction("⬅️")
             await embed.add_reaction("➡️")
             await embed.add_reaction("✔️")
@@ -432,7 +487,15 @@ async def upload(ctx):
                     title="These are the questions you made. Please navigate through them using the arrow keys. Press "
                           "the checkmark reaction once you're done checking",
                     colour=discord.Colour.dark_magenta()))
-            msg = await channel.history().find(lambda m: str(m.author.id) == botname)
+
+            while 1:
+                msg = await channel.history(limit=msg_limit).find(lambda m: str(m.author.id) == botname)
+                if msg is not None:
+                    break
+                msg_limit += 5
+
+            #msg = await channel.history().find(lambda m: str(m.author.id) == botname)
+
             doneChecking = False
 
             def checkdirection(reaction, user):
@@ -506,6 +569,13 @@ async def upload(ctx):
                     await channel.send(embed=discord.Embed(
                         title="This quiz set is currently set as public. Would you like it private?",
                         colour=discord.Colour.green()))
+
+                    while 1:
+                        msg = await channel.history(limit=msg_limit).find(lambda m: str(m.author.id) == botname)
+                        if msg is not None:
+                            break
+                        msg_limit += 5
+
                     msg = await channel.history().find(lambda m: str(m.author.id) == botname)
 
                 await msg.add_reaction("✔️")
