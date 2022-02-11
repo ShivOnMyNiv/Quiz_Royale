@@ -30,9 +30,7 @@ client = commands.Bot(command_prefix='+')
 client.remove_command('help')
 mongo = MongoClient(tokenIn.readline().rstrip())
 client.quiz = mongo.quizInfo.quizinfos
-client.elimination = None
-client.shuffle = None
-client.players = {}
+client.quizInfo = {}
 botname = tokenIn.readline().rstrip()
 
 ANSWERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
@@ -53,18 +51,19 @@ async def run(message, Id):
     channel = message.channel
     msg_limit = 5
     MessageMan = True
-    if client.players.get(channel.id):
+    if client.quizInfo.get(channel.id):
         await channel.send(
             embed=discord.Embed(
                 title="Quiz already running in this channel! Please allow it to finish or use a different channel.",
                 color=discord.Colour.red()))
         return
-    client.players[channel.id] = {}
-    try:
+    client.quizInfo[channel.id] = {"players": {}, "elimination": False, "shuffle": False}
+    #try:
+    if True:
         doc = client.quiz.find_one({"_id": Id})
         if doc["privacy"] == "private":
             if doc["name"] != str(message.author.id):
-                client.players.pop(channel.id)
+                client.quizInfo.pop(channel.id)
                 await channel.send(
                     embed=discord.Embed(title="You are not authorized to run this quiz", colour=discord.Colour.red()))
                 return
@@ -89,7 +88,7 @@ async def run(message, Id):
             channel = message.channel
             if rxn.emoji == "✔️" and str(user.id) != botname and str(
                     message.author.id) == botname and InvMsg == message:
-                client.players[channel.id][user.name] = 0
+                client.quizInfo[channel.id]["players"][user.name] = 0
             return False
 
         try:
@@ -108,9 +107,9 @@ async def run(message, Id):
         #InvMsg = await channel.history().find(lambda m: m.id == InvMsg.id)
 
         if InvMsg.reactions[0].count <= 1:
-            client.players.pop(channel.id)
+            client.quizInfo.pop(channel.id)
             await channel.send(
-                embed=discord.Embed(title="No players joined.  Ending the game.", color=discord.Colour.red()))
+                embed=discord.Embed(title="No players joined. Ending the game.", color=discord.Colour.red()))
             return
         await channel.send(embed=discord.Embed(
             title="Press 🇦 to play by elimination (wrong answers get you kicked) or 🇧 to play by subtraction (wrong "
@@ -132,11 +131,8 @@ async def run(message, Id):
 
         # Ensures that only player in game can vote
         def setCheck(rxn, user):
-            if rxn.emoji in ["🇦", "🇧"] and client.players[channel.id].get(user.name) is not None:
-                if rxn.emoji == "🇦":
-                    client.elimination = True
-                else:
-                    client.elimination = False
+            if rxn.emoji in ["🇦", "🇧"] and client.quizInfo[channel.id]["players"].get(user.name) is not None:
+                client.quizInfo[channel.id]["elimination"] = True if rxn.emoji == "🇦" else False
                 return True
             else:
                 return False
@@ -151,14 +147,14 @@ async def run(message, Id):
                 pass
             await OptMsg.edit(
                 embed=discord.Embed(title="No response given. Ending the quiz.", colour=discord.Colour.red()))
-            client.players.pop(channel.id)
+            client.quizInfo.pop(channel.id)
             return
         try:
             await OptMsg.clear_reaction("🇦")
             await OptMsg.clear_reaction("🇧")
         except:
             MessageMan = False
-        if client.elimination:
+        if client.quizInfo[channel.id]["elimination"]:
             await OptMsg.edit(embed=discord.Embed(title="You are playing by elimination", color=discord.Colour.blue()))
         else:
             await OptMsg.edit(
@@ -181,12 +177,8 @@ async def run(message, Id):
 
         # Function for checking for reaction given
         def randCheck(rxn, user):
-            if rxn.emoji in ["✔️", "❌"] and client.players[channel.id].get(user.name) is not None:
-                if rxn.emoji == "✔️":
-                    random.shuffle(questions)
-                    client.shuffle = True
-                else:
-                    client.shuffle = False
+            if rxn.emoji in ["✔️", "❌"] and client.quizInfo[channel.id]["players"].get(user.name) is not None:
+                client.quizInfo[channel.id]["shuffle"] = True if rxn.emoji == "✔️" else False
                 return True
             else:
                 return False
@@ -199,12 +191,13 @@ async def run(message, Id):
                 await RandQ.clear_reaction("❌")
             await RandQ.edit(
                 embed=discord.Embed(title="No response given. Ending the quiz.", colour=discord.Colour.red()))
-            client.players.pop(channel.id)
+            client.quizInfo.pop(channel.id)
             return
         if MessageMan:
             await RandQ.clear_reaction("✔️")
-            await RandQ.clear_reaction("❌")
-        if client.shuffle:
+            await RandQ.clear_reaction("❌") 
+        if client.quizInfo[channel.id]["shuffle"]:
+            random.shuffle(questions)
             await RandQ.edit(embed=discord.Embed(title="Questions have been shuffled", color=discord.Colour.blue()))
         else:
             await RandQ.edit(
@@ -216,9 +209,9 @@ async def run(message, Id):
         Qnum = 1
         winner = ""
         for iteration, row in enumerate(questions):
-            if len(client.players[channel.id]) == 1 and client.elimination:
+            if len(client.quizInfo[channel.id]["players"]) == 1 and client.quizInfo[channel.id]["elimination"]:
 
-                for i in client.players[channel.id].keys():
+                for i in client.quizInfo[channel.id]["players"].keys():
                     winner = i
 
                 await channel.send(
@@ -232,7 +225,7 @@ async def run(message, Id):
                 )
                 podium.add_field(name="🥇", value=winner, inline=False)
                 await channel.send(embed=podium)
-                client.players.pop(channel.id)
+                client.quizInfo.pop(channel.id)
                 break
             row = row.split("ȟ̵̢̨̤͕̔͊̓͒ͅ")
             for i in range(0, len(row)):
@@ -285,7 +278,7 @@ async def run(message, Id):
                 message = rxn.message
                 if len(message.embeds) == 0:
                     return False
-                if user.id != botname and client.players[channel.id].get(
+                if user.id != botname and client.quizInfo[channel.id]["players"].get(
                         user.name) is not None and message.id == msg.id:
                     return True
                 else:
@@ -307,26 +300,26 @@ async def run(message, Id):
                 if answer_dict.get(answer[0].emoji) and answer_dict[answer[0].emoji] == row[3]:
                     await channel.send(
                         "Correct!  " + answer[1].name + " will be awarded " + str(int(round(pts, 0))) + " points.")
-                    client.players[channel.id][answer[1].name] += int(round(pts, 0))
+                    client.quizInfo[channel.id]["players"][answer[1].name] += int(round(pts, 0))
                 else:
                     await channel.send("WRONG! The correct answer is " + row[3])
-                    if client.elimination:
-                        client.players[channel.id].pop(answer[1].name, None)
+                    if client.quizInfo[channel.id]["elimination"]:
+                        client.quizInfo[channel.id]["players"].pop(answer[1].name, None)
                         await channel.send(answer[1].name + " will be kicked!")
                     else:
-                        client.players[channel.id][answer[1].name] -= int(round(pts, 0))
+                        client.quizInfo[channel.id]["players"][answer[1].name] -= int(round(pts, 0))
                         await channel.send(answer[1].name + " will lose " + str(int(round(pts, 0))) + " points!")
-            client.players[channel.id] = dict(
-                sorted(client.players[channel.id].items(), key=lambda kv: kv[1], reverse=True))
+            client.quizInfo[channel.id]["players"] = dict(
+                sorted(client.quizInfo[channel.id]["players"].items(), key=lambda kv: kv[1], reverse=True))
             rankings = discord.Embed(
                 title="Rankings",
 
                 color=discord.Colour.red()
             )
             rank = 1
-            for player in client.players[channel.id].keys():
+            for player in client.quizInfo[channel.id]["players"].keys():
                 rankings.add_field(name=str(rank) + ". " + player,
-                                   value=str(client.players[channel.id][player]) + " point",
+                                   value=str(client.quizInfo[channel.id]["players"][player]) + " point",
                                    inline=False)
                 rank += 1
             await channel.send(embed=rankings)
@@ -340,18 +333,19 @@ async def run(message, Id):
                 )
                 rank = 1
                 medals = ["🥇", "🥈", "🥉"]
-                for player in client.players[channel.id].keys()[:3]:
+                for player in client.quizInfo[channel.id]["players"].keys():
                     Final.add_field(name=medals[rank - 1], value=player, inline=False)
                     rank += 1
+                    if rank == 4: break
                 await channel.send(embed=Final)
-                client.players.pop(channel.id)
+                client.quizInfo.pop(channel.id)
                 break
-    except Exception as e:
-        print(e)
-        if client.players.get(channel.id):
-            client.players.pop(channel.id)
-        await channel.send(embed=discord.Embed(title="Invalid Quiz Code Given or Invalid Quiz Set",
-                                               color=discord.Colour.red()))
+   # except Exception as e:
+    #    print(e)
+     #   if client.quizInfo.get(channel.id):
+      #      client.quizInfo.pop(channel.id)
+       # await channel.send(embed=discord.Embed(title="Invalid Quiz Code Given or Invalid Quiz Set",
+        #                                       color=discord.Colour.red()))
 
 
 # creates a 4 letter id and checks if it is unique. If not, reiterates. Returns unique id.
@@ -1191,7 +1185,7 @@ async def edit(ctx, quizKey):
 
         def checkRemoveDirection(payload):
             guild = client.get_guild(payload.guild_id)
-            channel = guild.get_channel(payload.channel_id)
+            #channel = guild.get_channel(payload.channel_id)
             reaction = payload.emoji.name
             return (payload.user_id == ctx.author.id and (str(reaction) == '✔️' or str(
                 reaction) == '⬅️' or str(
