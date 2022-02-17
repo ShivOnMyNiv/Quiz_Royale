@@ -19,7 +19,6 @@ from pymongo import MongoClient
 import requests
 
 # import keep_alive
-
 intents = discord.Intents.default()
 intents.reactions = True
 
@@ -58,8 +57,7 @@ async def run(message, Id):
                 color=discord.Colour.red()))
         return
     client.quizInfo[channel.id] = {"players": {}, "elimination": False, "shuffle": False}
-    #try:
-    if True:
+    try:
         doc = client.quiz.find_one({"_id": Id})
         if doc["privacy"] == "private":
             if doc["name"] != str(message.author.id):
@@ -227,7 +225,7 @@ async def run(message, Id):
                 await channel.send(embed=podium)
                 client.quizInfo.pop(channel.id)
                 break
-            row = row.split("ȟ̵̢̨̤͕̔͊̓͒ͅ")
+            #row = row.split("ȟ̵̢̨̤͕̔͊̓͒ͅ")
             for i in range(0, len(row)):
                 if row[i] == '':
                     if i == 2:
@@ -263,6 +261,13 @@ async def run(message, Id):
             for emoji in emojis[:len(row[5:])]:
                 await msg.add_reaction(emoji)
 
+            """
+            1. Starts recording time
+            2. Creates embed
+            3. Define check(rxn, user) function 
+            4. Calculates amount of time passed and stores in n
+            5. await asyncio.sleep(1.5 - n)
+            """
             await asyncio.sleep(1.5)
 
             for i, e in enumerate(emojis[:len(row[5:])]):
@@ -323,6 +328,13 @@ async def run(message, Id):
                                    inline=False)
                 rank += 1
             await channel.send(embed=rankings)
+            
+            """
+            1. Starts recording time
+            2. Creates Final embed
+            3. Calculates amount of time passed and stores in n
+            4. await asyncio.sleep(1.5 - n)
+            """
             await asyncio.sleep(1.5)
 
             if iteration == len(questions) - 1:
@@ -340,12 +352,12 @@ async def run(message, Id):
                 await channel.send(embed=Final)
                 client.quizInfo.pop(channel.id)
                 break
-   # except Exception as e:
-    #    print(e)
-     #   if client.quizInfo.get(channel.id):
-      #      client.quizInfo.pop(channel.id)
-       # await channel.send(embed=discord.Embed(title="Invalid Quiz Code Given or Invalid Quiz Set",
-        #                                       color=discord.Colour.red()))
+    except Exception as e:
+        print(e)
+        if client.quizInfo.get(channel.id):
+            client.quizInfo.pop(channel.id)
+        await channel.send(embed=discord.Embed(title="Invalid Quiz Code Given or Invalid Quiz Set",
+                                               color=discord.Colour.red()))
 
 
 # creates a 4 letter id and checks if it is unique. If not, reiterates. Returns unique id.
@@ -623,7 +635,8 @@ async def upload(ctx):
                     for row in quiz[6:]:
                         if set(list(row)) == {''}:
                             continue
-                        y = 'ȟ̵̢̨̤͕̔͊̓͒ͅ'.join(row)
+                        y = row
+                        #y = 'ȟ̵̢̨̤͕̔͊̓͒ͅ'.join(row)
                         client.quiz.update_one({"_id": unique_quizcode},
                                                {'$addToSet': {"questions": y}})
 
@@ -807,7 +820,7 @@ async def delete(ctx, quizcode):
         EmbedList = []
         Qnum = 1
         for iteration, row in enumerate(questions):
-            row = row.split("ȟ̵̢̨̤͕̔͊̓͒ͅ")
+            #row = row.split("ȟ̵̢̨̤͕̔͊̓͒ͅ")
             for i in range(0, len(row)):
                 if row[i] == '':
                     if i == 2:
@@ -1137,7 +1150,7 @@ async def edit(ctx, quizKey):
         EmbedList = []
         Qnum = 1
         for iteration, row in enumerate(questions):
-            row = row.split("ȟ̵̢̨̤͕̔͊̓͒ͅ")
+            #row = row.split("ȟ̵̢̨̤͕̔͊̓͒ͅ")
             for i in range(0, len(row)):
                 if row[i] == '':
                     if i == 2:
@@ -1403,7 +1416,8 @@ async def edit(ctx, quizKey):
                             for row in quiz[6:]:
                                 if set(list(row)) == {''}:
                                     continue
-                                y = 'ȟ̵̢̨̤͕̔͊̓͒ͅ'.join(row)
+                                y = row
+                                #y = 'ȟ̵̢̨̤͕̔͊̓͒ͅ'.join(row)
                                 client.quiz.update_one({"_id": quizKey},
                                                        {'$addToSet': {"questions": y}})
                             await msg.edit(embed=discord.Embed(description="Questions have been successfully updated",
