@@ -36,6 +36,10 @@ ANSWERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
 emojis = ['🇦', '🇧', '🇨', '🇩', '🇪', '🇫', '🇬', '🇭', '🇮', '🇯']
 answer_dict = {'🇦': "A", '🇧': "B", '🇨': "C", '🇩': "D", '🇪': "E", '🇫': "F", '🇬': "G", '🇭': "F", '🇮': "I",
                '🇯': "J"}
+medals = ["🥇", "🥈", "🥉"]
+posEmojis = ["🇦", "🇧"]
+checkMarks = ["✔️", "❌"]
+arrows = ["⬅️", "➡️"]
 tokenIn.close()
 
 
@@ -79,12 +83,12 @@ async def run(message, Id):
                 break
             msg_limit += 5
 
-        await InvMsg.add_reaction("✔️")
+        await InvMsg.add_reaction(checkMarks[0])
 
         def FalseReaction(rxn, user):
             message = rxn.message
             channel = message.channel
-            if rxn.emoji == "✔️" and str(user.id) != botname and str(
+            if rxn.emoji == checkMarks[0] and str(user.id) != botname and str(
                     message.author.id) == botname and InvMsg == message:
                 client.quizInfo[channel.id]["players"][user.name] = 0
             return False
@@ -120,13 +124,13 @@ async def run(message, Id):
                 break
             msg_limit += 5
 
-        await OptMsg.add_reaction("🇦")
-        await OptMsg.add_reaction("🇧")
+        await OptMsg.add_reaction(posEmojis[0])
+        await OptMsg.add_reaction(posEmojis[1])
 
         # Ensures that only player in game can vote
         def setCheck(rxn, user):
-            if rxn.emoji in ["🇦", "🇧"] and client.quizInfo[channel.id]["players"].get(user.name) is not None:
-                client.quizInfo[channel.id]["elimination"] = True if rxn.emoji == "🇦" else False
+            if rxn.emoji in posEmojis and client.quizInfo[channel.id]["players"].get(user.name) is not None:
+                client.quizInfo[channel.id]["elimination"] = True if rxn.emoji == posEmojis[0] else False
                 return True
             else:
                 return False
@@ -135,8 +139,8 @@ async def run(message, Id):
             await client.wait_for("reaction_add", check=setCheck, timeout=20)
         except:
             try:
-                await OptMsg.clear_reaction("🇦")
-                await OptMsg.clear_reaction("🇧")
+                await OptMsg.clear_reaction(posEmojis[0])
+                await OptMsg.clear_reaction(posEmojis[1])
             except:
                 pass
             await OptMsg.edit(
@@ -144,8 +148,8 @@ async def run(message, Id):
             client.quizInfo.pop(channel.id)
             return
         try:
-            await OptMsg.clear_reaction("🇦")
-            await OptMsg.clear_reaction("🇧")
+            await OptMsg.clear_reaction(posEmojis[0])
+            await OptMsg.clear_reaction(posEmojis[1])
         except:
             MessageMan = False
         if client.quizInfo[channel.id]["elimination"]:
@@ -164,13 +168,13 @@ async def run(message, Id):
                 break
             msg_limit += 5
 
-        await RandQ.add_reaction("✔️")
-        await RandQ.add_reaction("❌")
+        await RandQ.add_reaction(checkMarks[0])
+        await RandQ.add_reaction(checkMarks[1])
 
         # Function for checking for reaction given
         def randCheck(rxn, user):
-            if rxn.emoji in ["✔️", "❌"] and client.quizInfo[channel.id]["players"].get(user.name) is not None:
-                client.quizInfo[channel.id]["shuffle"] = True if rxn.emoji == "✔️" else False
+            if rxn.emoji in checkMarks and client.quizInfo[channel.id]["players"].get(user.name) is not None:
+                client.quizInfo[channel.id]["shuffle"] = True if rxn.emoji == checkMarks[0] else False
                 return True
             else:
                 return False
@@ -179,15 +183,15 @@ async def run(message, Id):
             await client.wait_for("reaction_add", check=randCheck, timeout=20)
         except:
             if MessageMan:
-                await RandQ.clear_reaction("✔️")
-                await RandQ.clear_reaction("❌")
+                await RandQ.clear_reaction(checkMarks[0])
+                await RandQ.clear_reaction(checkMarks[1])
             await RandQ.edit(
                 embed=discord.Embed(title="No response given. Ending the quiz.", colour=discord.Colour.red()))
             client.quizInfo.pop(channel.id)
             return
         if MessageMan:
-            await RandQ.clear_reaction("✔️")
-            await RandQ.clear_reaction("❌") 
+            await RandQ.clear_reaction(checkMarks[0])
+            await RandQ.clear_reaction(checkMarks[1]) 
         if client.quizInfo[channel.id]["shuffle"]:
             random.shuffle(questions)
             await RandQ.edit(embed=discord.Embed(title="Questions have been shuffled", color=discord.Colour.blue()))
@@ -215,7 +219,7 @@ async def run(message, Id):
 
                     color=discord.Colour.gold()
                 )
-                podium.add_field(name="🥇", value=winner, inline=False)
+                podium.add_field(name=arrows[1], value=winner, inline=False)
                 await channel.send(embed=podium)
                 client.quizInfo.pop(channel.id)
                 break
@@ -336,7 +340,6 @@ async def run(message, Id):
                     color=discord.Colour.gold()
                 )
                 rank = 1
-                medals = ["🥇", "🥈", "🥉"]
                 for player in client.quizInfo[channel.id]["players"].keys():
                     Final.add_field(name=medals[rank - 1], value=player, inline=False)
                     rank += 1
@@ -473,9 +476,9 @@ async def upload(ctx):
                     break
                 msg_limit += 5
 
-            await embed.add_reaction("⬅️")
-            await embed.add_reaction("➡️")
-            await embed.add_reaction("✔️")
+            await embed.add_reaction(arrows[0])
+            await embed.add_reaction(arrows[1])
+            await embed.add_reaction(checkMarks[0])
             await channel.send(
                 embed=discord.Embed(
                     title="These are the questions you made. Please navigate through them using the arrow keys. Press "
@@ -493,15 +496,15 @@ async def upload(ctx):
 
             def checkdirection(reaction, user):
                 return (user == message.author and (str(reaction.emoji) == '✔️' or str(
-                    reaction.emoji) == '⬅️' or str(
-                    reaction.emoji) == '➡️')) and reaction.message == embed
+                    reaction.emoji) == arrows[0] or str(
+                    reaction.emoji) == arrows[1])) and reaction.message == embed
 
             def checkRemoveDirection(payload):
                 guild = client.get_guild(payload.guild_id)
                 reaction = payload.emoji.name
                 return (payload.user_id == ctx.author.id and (str(reaction) == '✔️' or str(
-                    reaction) == '⬅️' or str(
-                    reaction) == '➡️')) and payload.message_id == embed.id
+                    reaction) == arrows[0] or str(
+                    reaction) == arrows[1])) and payload.message_id == embed.id
 
             while not doneChecking:
                 pending_tasks = [client.wait_for('raw_reaction_remove', check=checkRemoveDirection),
@@ -511,49 +514,49 @@ async def upload(ctx):
                 for task in done_tasks:
                     quizCheck = await task
                 try:
-                    if quizCheck[0].emoji == "⬅️":
+                    if quizCheck[0].emoji == arrows[0]:
                         j -= 1
                         if j < 0:
                             j = len(EmbedList) - 1
                         await embed.edit(embed=EmbedList[j])
-                    if quizCheck[0].emoji == "➡️":
+                    if quizCheck[0].emoji == arrows[1]:
                         j += 1
                         if j > len(EmbedList) - 1:
                             j = 0
                         await embed.edit(embed=EmbedList[j])
-                    if quizCheck[0].emoji == "✔️":
+                    if quizCheck[0].emoji == checkMarks[0]:
                         doneChecking = True
                 except:
-                    if quizCheck.emoji.name == "⬅️":
+                    if quizCheck.emoji.name == arrows[0]:
                         j -= 1
                         if j < 0:
                             j = len(EmbedList) - 1
                         await embed.edit(embed=EmbedList[j])
-                    if quizCheck.emoji.name == "➡️":
+                    if quizCheck.emoji.name == arrows[1]:
                         j += 1
                         if j > len(EmbedList) - 1:
                             j = 0
                         await embed.edit(embed=EmbedList[j])
-                    if quizCheck.emoji.name == "✔️":
+                    if quizCheck.emoji.name == checkMarks[0]:
                         doneChecking = True
         await embed.delete()
         await msg.edit(
             embed=discord.Embed(title="Is this the quiz set you wish to create?", colour=discord.Colour.purple()))
-        await msg.add_reaction("✔️")
-        await msg.add_reaction("❌")
+        await msg.add_reaction(checkMarks[0])
+        await msg.add_reaction(checkMarks[1])
 
         def checkanswer(reaction, user):
             return user.id == message.author.id and (str(reaction.emoji) == '✔️' or str(reaction.emoji) == '❌')
 
         try:
             userAnswer = await client.wait_for('reaction_add', timeout=20.0, check=checkanswer)
-            if userAnswer[0].emoji == "✔️":
+            if userAnswer[0].emoji == checkMarks[0]:
                 privacySetting = "public"
                 quizname = quiz[2][0]
 
                 try:
-                    await msg.clear_reaction("✔️")
-                    await msg.clear_reaction("❌")
+                    await msg.clear_reaction(checkMarks[0])
+                    await msg.clear_reaction(checkMarks[1])
 
                     await msg.edit(embed=discord.Embed(
                         title="This quiz set is currently set as public. Would you like it private?",
@@ -569,17 +572,17 @@ async def upload(ctx):
                             break
                         msg_limit += 5
 
-                await msg.add_reaction("✔️")
-                await msg.add_reaction("❌")
+                await msg.add_reaction(checkMarks[0])
+                await msg.add_reaction(checkMarks[1])
                 try:
 
                     privacy = await client.wait_for("reaction_add", timeout=20.0, check=checkanswer)
-                    if privacy[0].emoji == "✔️":
+                    if privacy[0].emoji == checkMarks[0]:
                         privacySetting = "private"
                 except asyncio.TimeoutError:
                     try:
-                        await msg.clear_reaction("✔️")
-                        await msg.clear_reaction("❌")
+                        await msg.clear_reaction(checkMarks[0])
+                        await msg.clear_reaction(checkMarks[1])
                         await msg.edit(embed=discord.Embed(
                             title="You timed out!",
                             colour=discord.Colour.red()))
@@ -594,8 +597,8 @@ async def upload(ctx):
                                 break
                             msg_limit += 5
                 try:
-                    await msg.clear_reaction("✔️")
-                    await msg.clear_reaction("❌")
+                    await msg.clear_reaction(checkMarks[0])
+                    await msg.clear_reaction(checkMarks[1])
 
                     await msg.edit(embed=discord.Embed(
                         title="Okay, your quiz set will be " + privacySetting + ". Your current quiz name is **\"" + quizname + "\"**. Would you like to change it?",
@@ -610,8 +613,8 @@ async def upload(ctx):
                             break
                         msg_limit += 5
 
-                await msg.add_reaction("✔️")
-                await msg.add_reaction("❌")
+                await msg.add_reaction(checkMarks[0])
+                await msg.add_reaction(checkMarks[1])
 
                 # creates quiz and uploads it into the database
                 def createquiz():
@@ -635,12 +638,12 @@ async def upload(ctx):
 
                 try:
                     changeName = await client.wait_for('reaction_add', timeout=20.0, check=checkanswer)
-                    if changeName[0].emoji == "✔️":
+                    if changeName[0].emoji == checkMarks[0]:
                         nameDesired = False
                         while not nameDesired:
                             try:
-                                await msg.clear_reaction("✔️")
-                                await msg.clear_reaction("❌")
+                                await msg.clear_reaction(checkMarks[0])
+                                await msg.clear_reaction(checkMarks[1])
 
                                 await msg.edit(embed=discord.Embed(
                                     title="Please type what you would like to name your quiz.",
@@ -663,8 +666,8 @@ async def upload(ctx):
                                 desiredName = await client.wait_for("message", timeout=20.0, check=checkName)
 
                                 try:
-                                    await msg.clear_reaction("✔️")
-                                    await msg.clear_reaction("❌")
+                                    await msg.clear_reaction(checkMarks[0])
+                                    await msg.clear_reaction(checkMarks[1])
 
                                     await msg.edit(embed=discord.Embed(
                                         title="Your quiz's name is currently **\"" + desiredName.content + "\"**. Is this correct?",
@@ -680,21 +683,21 @@ async def upload(ctx):
                                             break
                                         msg_limit += 5
 
-                                await msg.add_reaction("✔️")
-                                await msg.add_reaction("❌")
+                                await msg.add_reaction(checkMarks[0])
+                                await msg.add_reaction(checkMarks[1])
 
                                 try:
                                     nameConfirmation = await client.wait_for("reaction_add", timeout=20.0,
                                                                              check=checkanswer)
-                                    if nameConfirmation[0].emoji == "✔️":
+                                    if nameConfirmation[0].emoji == checkMarks[0]:
                                         nameDesired = True
                                         quizname = desiredName.content
 
                                         createquiz()
 
                                         try:
-                                            await msg.clear_reaction("✔️")
-                                            await msg.clear_reaction("❌")
+                                            await msg.clear_reaction(checkMarks[0])
+                                            await msg.clear_reaction(checkMarks[1])
                                         except:
                                             pass
 
@@ -709,13 +712,13 @@ async def upload(ctx):
                                             await author.send(embed=discord.Embed(
                                                 title="Success! Your private quiz set ID is " + unique_quizcode,
                                                 colour=discord.Colour.green()))
-                                    elif nameConfirmation[0].emoji == "❌":
+                                    elif nameConfirmation[0].emoji == checkMarks[1]:
                                         continue
 
                                 except asyncio.TimeoutError:
                                     try:
-                                        await msg.clear_reaction("✔️")
-                                        await msg.clear_reaction("❌")
+                                        await msg.clear_reaction(checkMarks[0])
+                                        await msg.clear_reaction(checkMarks[1])
                                     except:
                                         pass
                                     await msg.edit(embed=discord.Embed(
@@ -729,13 +732,13 @@ async def upload(ctx):
                                     colour=discord.Colour.red()))
                                 return
 
-                    elif changeName[0].emoji == "❌":
+                    elif changeName[0].emoji == checkMarks[1]:
 
                         createquiz()
 
                         try:
-                            await msg.clear_reaction("✔️")
-                            await msg.clear_reaction("❌")
+                            await msg.clear_reaction(checkMarks[0])
+                            await msg.clear_reaction(checkMarks[1])
                         except:
                             pass
 
@@ -750,8 +753,8 @@ async def upload(ctx):
 
                 except asyncio.TimeoutError:
                     try:
-                        await msg.clear_reaction("✔️")
-                        await msg.clear_reaction("❌")
+                        await msg.clear_reaction(checkMarks[0])
+                        await msg.clear_reaction(checkMarks[1])
                     except:
                         pass
                     await msg.edit(embed=discord.Embed(
@@ -759,10 +762,10 @@ async def upload(ctx):
                         colour=discord.Colour.red()))
                     return
 
-            elif userAnswer[0].emoji == "❌":
+            elif userAnswer[0].emoji == checkMarks[1]:
                 try:
-                    await msg.clear_reaction("✔️")
-                    await msg.clear_reaction("❌")
+                    await msg.clear_reaction(checkMarks[0])
+                    await msg.clear_reaction(checkMarks[1])
                 except:
                     pass
                 await msg.edit(embed=discord.Embed(
@@ -772,8 +775,8 @@ async def upload(ctx):
 
         except asyncio.TimeoutError:
             try:
-                await msg.clear_reaction("✔️")
-                await msg.clear_reaction("❌")
+                await msg.clear_reaction(checkMarks[0])
+                await msg.clear_reaction(checkMarks[1])
             except:
                 pass
             await msg.edit(embed=discord.Embed(
@@ -866,21 +869,21 @@ async def delete(ctx, quizcode):
             embed=discord.Embed(
                 title="Verify that this is the correct quiz. Navigate using the arrow keys and click the check mark when you're done checking.",
                 colour=discord.Colour.light_gray()))
-        await msg.add_reaction("⬅️")
-        await msg.add_reaction("➡️")
-        await msg.add_reaction("✔️")
+        await msg.add_reaction(arrows[0])
+        await msg.add_reaction(arrows[1])
+        await msg.add_reaction(checkMarks[0])
 
         def checkdirection(reaction, user):
-            return user == ctx.author and (str(reaction.emoji) == '✔️' or str(reaction.emoji) == '⬅️' or str(
-                reaction.emoji) == '➡️')
+            return user == ctx.author and (str(reaction.emoji) == '✔️' or str(reaction.emoji) == arrows[0] or str(
+                reaction.emoji) == arrows[1])
 
         def checkRemoveDirection(payload):
             guild = client.get_guild(payload.guild_id)
             channel = guild.get_channel(payload.channel_id)
             reaction = payload.emoji.name
             return (payload.user_id == ctx.author.id and (str(reaction) == '✔️' or str(
-                reaction) == '⬅️' or str(
-                reaction) == '➡️')) and msg.id == payload.message_id
+                reaction) == arrows[0] or str(
+                reaction) == arrows[1])) and msg.id == payload.message_id
 
         doneChecking = False
 
@@ -892,30 +895,30 @@ async def delete(ctx, quizcode):
             for task in done_tasks:
                 quizCheck = await task
             try:
-                if quizCheck[0].emoji == "⬅️":
+                if quizCheck[0].emoji == arrows[0]:
                     j -= 1
                     if j < 0:
                         j = len(EmbedList) - 1
                     await msg.edit(embed=EmbedList[j])
-                if quizCheck[0].emoji == "➡️":
+                if quizCheck[0].emoji == arrows[1]:
                     j += 1
                     if j > len(EmbedList) - 1:
                         j = 0
                     await msg.edit(embed=EmbedList[j])
-                if quizCheck[0].emoji == "✔️":
+                if quizCheck[0].emoji == checkMarks[0]:
                     doneChecking = True
             except:
-                if quizCheck.emoji.name == "⬅️":
+                if quizCheck.emoji.name == arrows[0]:
                     j -= 1
                     if j < 0:
                         j = len(EmbedList) - 1
                     await msg.edit(embed=EmbedList[j])
-                if quizCheck.emoji.name == "➡️":
+                if quizCheck.emoji.name == arrows[1]:
                     j += 1
                     if j > len(EmbedList) - 1:
                         j = 0
                     await msg.edit(embed=EmbedList[j])
-                if quizCheck.emoji.name == "✔️":
+                if quizCheck.emoji.name == checkMarks[0]:
                     doneChecking = True
         await msg.delete()
         while 1:
@@ -925,20 +928,20 @@ async def delete(ctx, quizcode):
             msg_limit += 5
         await msg.edit(
             embed=discord.Embed(title="Is this the quiz set you wish to delete?", colour=discord.Colour.orange()))
-        await msg.add_reaction("✔️")
-        await msg.add_reaction("❌")
+        await msg.add_reaction(checkMarks[0])
+        await msg.add_reaction(checkMarks[1])
 
         def checkanswer(reaction, user):
             return user == ctx.author and (str(reaction.emoji) == '✔️' or str(reaction.emoji) == '❌')
 
         try:
             userAnswer = await client.wait_for('reaction_add', timeout=20.0, check=checkanswer)
-            if userAnswer[0].emoji == "✔️":
+            if userAnswer[0].emoji == checkMarks[0]:
                 client.quiz.delete_one({"_id": quizcode})
                 client.quiz.update_one({"_id": "Key"}, {"$pull": {"Codes": quizcode}})
                 try:
-                    await msg.clear_reaction("✔️")
-                    await msg.clear_reaction("❌")
+                    await msg.clear_reaction(checkMarks[0])
+                    await msg.clear_reaction(checkMarks[1])
                     await msg.edit(embed=discord.Embed(
                         title="Success! " + quizcode + " has been deleted",
                         colour=discord.Colour.green()))
@@ -946,10 +949,10 @@ async def delete(ctx, quizcode):
                     await msg.edit(embed=discord.Embed(
                         title="Success! " + quizcode + " has been deleted",
                         colour=discord.Colour.green()))
-            elif userAnswer[0].emoji == "❌":
+            elif userAnswer[0].emoji == checkMarks[1]:
                 try:
-                    await msg.clear_reaction("✔️")
-                    await msg.clear_reaction("❌")
+                    await msg.clear_reaction(checkMarks[0])
+                    await msg.clear_reaction(checkMarks[1])
                     await msg.edit(embed=discord.Embed(
                         title="Got it. Your quiz set won't be deleted.",
                         colour=discord.Colour.green()))
@@ -961,8 +964,8 @@ async def delete(ctx, quizcode):
 
         except asyncio.TimeoutError:
             try:
-                await msg.clear_reaction("✔️")
-                await msg.clear_reaction("❌")
+                await msg.clear_reaction(checkMarks[0])
+                await msg.clear_reaction(checkMarks[1])
                 await msg.edit(embed=discord.Embed(
                     title="You timed out!",
                     colour=discord.Colour.red()))
@@ -1022,8 +1025,8 @@ async def edit(ctx, quizKey):
             if msg is not None:
                 break
             msg_limit += 5
-        await msg.add_reaction("✔️")
-        await msg.add_reaction("❌")
+        await msg.add_reaction(checkMarks[0])
+        await msg.add_reaction(checkMarks[1])
 
         def setCheck(reaction, user):
             return user == ctx.author and (
@@ -1037,12 +1040,12 @@ async def edit(ctx, quizKey):
             if doc["privacy"] == "public":
                 private = "private"
             try:
-                await msg.clear_reaction("✔️")
-                await msg.clear_reaction("❌")
+                await msg.clear_reaction(checkMarks[0])
+                await msg.clear_reaction(checkMarks[1])
             except:
                 MessageMan = False
 
-            if setting[0].emoji == "❌":
+            if setting[0].emoji == checkMarks[1]:
                 if MessageMan:
                     await msg.edit(
                         embed=discord.Embed(description="Would you like to switch this quiz to " + private + "?",
@@ -1056,14 +1059,14 @@ async def edit(ctx, quizKey):
                         if msg is not None:
                             break
                         msg_limit += 5
-                await msg.add_reaction("✔️")
-                await msg.add_reaction("❌")
+                await msg.add_reaction(checkMarks[0])
+                await msg.add_reaction(checkMarks[1])
                 try:
                     setting = await client.wait_for("reaction_add", timeout=10.0, check=setCheck)
                     if MessageMan:
-                        await msg.clear_reaction("✔️")
-                        await msg.clear_reaction("❌")
-                    if setting[0].emoji == "✔️":
+                        await msg.clear_reaction(checkMarks[0])
+                        await msg.clear_reaction(checkMarks[1])
+                    if setting[0].emoji == checkMarks[0]:
                         client.quiz.update_one({"_id": quizKey},
                                                {"$set": {"privacy": private}})
                         await msg.edit(embed=discord.Embed(description="Alright! Changed privacy to " + private + "!",
@@ -1073,8 +1076,8 @@ async def edit(ctx, quizKey):
                                                            color=discord.Colour.green()))
                 except asyncio.TimeoutError:
                     if MessageMan:
-                        await msg.clear_reaction("✔️")
-                        await msg.clear_reaction("❌")
+                        await msg.clear_reaction(checkMarks[0])
+                        await msg.clear_reaction(checkMarks[1])
                     await msg.edit(embed=discord.Embed(
                         title="You timed out!",
                         colour=discord.Colour.red()))
@@ -1083,8 +1086,8 @@ async def edit(ctx, quizKey):
                 await msg.edit(embed=discord.Embed(description="Not changing privacy", color=discord.Colour.green()))
         except asyncio.TimeoutError:
             try:
-                await msg.clear_reaction("✔️")
-                await msg.clear_reaction("❌")
+                await msg.clear_reaction(checkMarks[0])
+                await msg.clear_reaction(checkMarks[1])
             except:
                 pass
             await msg.edit(embed=discord.Embed(
@@ -1100,8 +1103,8 @@ async def edit(ctx, quizKey):
             if msg is not None:
                 break
             msg_limit += 5
-        await msg.add_reaction("✔️")
-        await msg.add_reaction("❌")
+        await msg.add_reaction(checkMarks[0])
+        await msg.add_reaction(checkMarks[1])
 
         def validQuestion(message):
             if message.author != ctx.author:
@@ -1114,9 +1117,9 @@ async def edit(ctx, quizKey):
         try:
             setting = await client.wait_for("reaction_add", timeout=10.0, check=setCheck)
             if MessageMan:
-                await msg.clear_reaction("✔️")
-                await msg.clear_reaction("❌")
-            if setting[0].emoji == "❌":
+                await msg.clear_reaction(checkMarks[0])
+                await msg.clear_reaction(checkMarks[1])
+            if setting[0].emoji == checkMarks[1]:
                 await msg.edit(
                     embed=discord.Embed(description="Write up what would you like to change the quiz name to.",
                                         color=discord.Colour.blue()))
@@ -1136,14 +1139,14 @@ async def edit(ctx, quizKey):
                             if msg is not None:
                                 break
                             msg_limit += 5
-                    await msg.add_reaction("✔️")
-                    await msg.add_reaction("❌")
+                    await msg.add_reaction(checkMarks[0])
+                    await msg.add_reaction(checkMarks[1])
                     try:
                         rxn = await client.wait_for("reaction_add", timeout=20, check=setCheck)
                         if MessageMan:
-                            await msg.clear_reaction("✔️")
-                            await msg.clear_reaction("❌")
-                        if rxn[0].emoji == "✔️":
+                            await msg.clear_reaction(checkMarks[0])
+                            await msg.clear_reaction(checkMarks[1])
+                        if rxn[0].emoji == checkMarks[0]:
                             client.quiz.update_one({"_id": quizKey},
                                                    {"$set": {"quizName": name}})
                             await msg.edit(embed=discord.Embed(description="Alright changed name to " + name + "!",
@@ -1153,8 +1156,8 @@ async def edit(ctx, quizKey):
                                                                color=discord.Colour.green()))
                     except asyncio.TimeoutError:
                         if MessageMan:
-                            await msg.clear_reaction("✔️")
-                            await msg.clear_reaction("❌")
+                            await msg.clear_reaction(checkMarks[0])
+                            await msg.clear_reaction(checkMarks[1])
                             await msg.edit(embed=discord.Embed(
                                 title="You timed out!",
                                 colour=discord.Colour.red()))
@@ -1169,8 +1172,8 @@ async def edit(ctx, quizKey):
                                                    color=discord.Colour.green()))
         except asyncio.TimeoutError:
             if MessageMan:
-                await msg.clear_reaction("✔️")
-                await msg.clear_reaction("❌")
+                await msg.clear_reaction(checkMarks[0])
+                await msg.clear_reaction(checkMarks[1])
             await msg.edit(embed=discord.Embed(
                 title="You timed out!",
                 colour=discord.Colour.red()))
@@ -1221,21 +1224,21 @@ async def edit(ctx, quizKey):
             embed=discord.Embed(
                 description="These are the questions this quiz has. Navigate using the arrow keys and click the check mark when you're done checking.",
                 colour=discord.Colour.light_gray()))
-        await msg.add_reaction("⬅️")
-        await msg.add_reaction("➡️")
-        await msg.add_reaction("✔️")
+        await msg.add_reaction(arrows[0])
+        await msg.add_reaction(arrows[1])
+        await msg.add_reaction(checkMarks[0])
 
         def checkdirection(reaction, user):
-            return user == ctx.author and (str(reaction.emoji) == '✔️' or str(reaction.emoji) == '⬅️' or str(
-                reaction.emoji) == '➡️')
+            return user == ctx.author and (str(reaction.emoji) == '✔️' or str(reaction.emoji) == arrows[0] or str(
+                reaction.emoji) == arrows[1])
 
         def checkRemoveDirection(payload):
             guild = client.get_guild(payload.guild_id)
             #channel = guild.get_channel(payload.channel_id)
             reaction = payload.emoji.name
             return (payload.user_id == ctx.author.id and (str(reaction) == '✔️' or str(
-                reaction) == '⬅️' or str(
-                reaction) == '➡️')) and payload.message_id == msg.id
+                reaction) == arrows[0] or str(
+                reaction) == arrows[1])) and payload.message_id == msg.id
 
         doneChecking = False
 
@@ -1247,30 +1250,30 @@ async def edit(ctx, quizKey):
             for task in done_tasks:
                 quizCheck = await task
             try:
-                if quizCheck[0].emoji == "⬅️":
+                if quizCheck[0].emoji == arrows[0]:
                     j -= 1
                     if j < 0:
                         j = len(EmbedList) - 1
                     await msg.edit(embed=EmbedList[j])
-                if quizCheck[0].emoji == "➡️":
+                if quizCheck[0].emoji == arrows[1]:
                     j += 1
                     if j > len(EmbedList) - 1:
                         j = 0
                     await msg.edit(embed=EmbedList[j])
-                if quizCheck[0].emoji == "✔️":
+                if quizCheck[0].emoji == checkMarks[0]:
                     doneChecking = True
             except:
-                if quizCheck.emoji.name == "⬅️":
+                if quizCheck.emoji.name == arrows[0]:
                     j -= 1
                     if j < 0:
                         j = len(EmbedList) - 1
                     await msg.edit(embed=EmbedList[j])
-                if quizCheck.emoji.name == "➡️":
+                if quizCheck.emoji.name == arrows[1]:
                     j += 1
                     if j > len(EmbedList) - 1:
                         j = 0
                     await msg.edit(embed=EmbedList[j])
-                if quizCheck.emoji.name == "✔️":
+                if quizCheck.emoji.name == checkMarks[0]:
                     doneChecking = True
         await msg.delete()
         while 1:
@@ -1280,14 +1283,14 @@ async def edit(ctx, quizKey):
             msg_limit += 5
         await msg.edit(
             embed=discord.Embed(description="Are you fine with these questions?", colour=discord.Colour.orange()))
-        await msg.add_reaction("✔️")
-        await msg.add_reaction("❌")
+        await msg.add_reaction(checkMarks[0])
+        await msg.add_reaction(checkMarks[1])
         try:
             setting = await client.wait_for("reaction_add", timeout=15.0, check=setCheck)
             if MessageMan:
-                await msg.clear_reaction("✔️")
-                await msg.clear_reaction("❌")
-            if setting[0].emoji == "❌":
+                await msg.clear_reaction(checkMarks[0])
+                await msg.clear_reaction(checkMarks[1])
+            if setting[0].emoji == checkMarks[1]:
                 await msg.edit(embed=discord.Embed(description="Please upload the csv of this updated quiz",
                                                    colour=discord.Colour.orange()))
 
@@ -1378,9 +1381,9 @@ async def edit(ctx, quizKey):
                             if embed is not None:
                                 break
                             msg_limit += 5
-                        await embed.add_reaction("⬅️")
-                        await embed.add_reaction("➡️")
-                        await embed.add_reaction("✔️")
+                        await embed.add_reaction(arrows[0])
+                        await embed.add_reaction(arrows[1])
+                        await embed.add_reaction(checkMarks[0])
                         await channel.send(
                             embed=discord.Embed(
                                 title="These are the new questions you made. Please navigate through them using the arrow keys. Press the checkmark reaction once you're done checking",
@@ -1394,16 +1397,16 @@ async def edit(ctx, quizKey):
 
                         def Ncheckdirection(reaction, user):
                             return (user == message.author and (str(reaction.emoji) == '✔️' or str(
-                                reaction.emoji) == '⬅️' or str(
-                                reaction.emoji) == '➡️')) and reaction.message == embed
+                                reaction.emoji) == arrows[0] or str(
+                                reaction.emoji) == arrows[1])) and reaction.message == embed
 
                         def NcheckRemoveDirection(payload):
                             guild = client.get_guild(payload.guild_id)
                             channel = guild.get_channel(payload.channel_id)
                             reaction = payload.emoji.name
                             return (payload.user_id == ctx.author.id and (str(reaction) == '✔️' or str(
-                                reaction) == '⬅️' or str(
-                                reaction) == '➡️')) and payload.message_id == embed.id
+                                reaction) == arrows[0] or str(
+                                reaction) == arrows[1])) and payload.message_id == embed.id
 
                         while not doneChecking:
                             pending_tasks = [client.wait_for('raw_reaction_remove', check=NcheckRemoveDirection),
@@ -1414,42 +1417,42 @@ async def edit(ctx, quizKey):
                             for task in done_tasks:
                                 quizCheck = await task
                             try:
-                                if quizCheck[0].emoji == "⬅️":
+                                if quizCheck[0].emoji == arrows[0]:
                                     j -= 1
                                     if j < 0:
                                         j = len(EmbedList) - 1
                                     await embed.edit(embed=EmbedList[j])
-                                if quizCheck[0].emoji == "➡️":
+                                if quizCheck[0].emoji == arrows[1]:
                                     j += 1
                                     if j > len(EmbedList) - 1:
                                         j = 0
                                     await embed.edit(embed=EmbedList[j])
-                                if quizCheck[0].emoji == "✔️":
+                                if quizCheck[0].emoji == checkMarks[0]:
                                     doneChecking = True
                             except:
-                                if quizCheck.emoji.name == "⬅️":
+                                if quizCheck.emoji.name == arrows[0]:
                                     j -= 1
                                     if j < 0:
                                         j = len(EmbedList) - 1
                                     await embed.edit(embed=EmbedList[j])
-                                if quizCheck.emoji.name == "➡️":
+                                if quizCheck.emoji.name == arrows[1]:
                                     j += 1
                                     if j > len(EmbedList) - 1:
                                         j = 0
                                     await embed.edit(embed=EmbedList[j])
-                                if quizCheck.emoji.name == "✔️":
+                                if quizCheck.emoji.name == checkMarks[0]:
                                     doneChecking = True
                     await embed.delete()
                     await msg.edit(embed=discord.Embed(title="Is this the updated quiz set you wish to create?",
                                                        colour=discord.Colour.purple()))
-                    await msg.add_reaction("✔️")
-                    await msg.add_reaction("❌")
+                    await msg.add_reaction(checkMarks[0])
+                    await msg.add_reaction(checkMarks[1])
                     try:
                         setting = await client.wait_for("reaction_add", timeout=20.0, check=setCheck)
                         if MessageMan:
-                            await msg.clear_reaction("✔️")
-                            await msg.clear_reaction("❌")
-                        if setting[0].emoji == "❌":
+                            await msg.clear_reaction(checkMarks[0])
+                            await msg.clear_reaction(checkMarks[1])
+                        if setting[0].emoji == checkMarks[1]:
                             await msg.edit(embed=discord.Embed(description="Keeping the questions same",
                                                                colour=discord.Colour.green()))
                         else:
@@ -1469,8 +1472,8 @@ async def edit(ctx, quizKey):
                                                                colour=discord.Colour.green()))
                     except asyncio.TimeoutError:
                         if MessageMan:
-                            await msg.clear_reaction("✔️")
-                            await msg.clear_reaction("❌")
+                            await msg.clear_reaction(checkMarks[0])
+                            await msg.clear_reaction(checkMarks[1])
                         await msg.edit(embed=discord.Embed(
                             title="You timed out!",
                             colour=discord.Colour.red()))
@@ -1485,8 +1488,8 @@ async def edit(ctx, quizKey):
                     embed=discord.Embed(description="Keeping the questions same", colour=discord.Colour.green()))
         except asyncio.TimeoutError:
             if MessageMan:
-                await msg.clear_reaction("✔️")
-                await msg.clear_reaction("❌")
+                await msg.clear_reaction(checkMarks[0])
+                await msg.clear_reaction(checkMarks[1])
             await msg.edit(embed=discord.Embed(
                 title="You timed out!",
                 colour=discord.Colour.red()))
