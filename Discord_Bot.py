@@ -104,8 +104,6 @@ async def run(message, Id):
                 break
             msg_limit += 5
 
-        #InvMsg = await channel.history().find(lambda m: m.id == InvMsg.id)
-
         if InvMsg.reactions[0].count <= 1:
             client.quizInfo.pop(channel.id)
             await channel.send(
@@ -123,8 +121,6 @@ async def run(message, Id):
                     msg_limit //= 3
                 break
             msg_limit += 5
-
-        #OptMsg = await channel.history().find(lambda m: str(m.author.id) == botname)
 
         await OptMsg.add_reaction("🇦")
         await OptMsg.add_reaction("🇧")
@@ -169,8 +165,6 @@ async def run(message, Id):
             if RandQ is not None:
                 break
             msg_limit += 5
-
-        #RandQ = await channel.history().find(lambda m: str(m.author.id) == botname)
 
         await RandQ.add_reaction("✔️")
         await RandQ.add_reaction("❌")
@@ -257,8 +251,6 @@ async def run(message, Id):
                         msg_limit //= 3
                     break
                 msg_limit += 5
-
-            #msg = await channel.history().find(lambda m: str(m.author.id) == botname)
 
             for emoji in emojis[:len(row[5:])]:
                 await msg.add_reaction(emoji)
@@ -353,9 +345,8 @@ def quizcodemaker(col):
     filename = ''.join(random.choice(string.ascii_uppercase) for i in range(4))
     doc = col.find_one({"_id": "Key"})
     codes = doc["Codes"]
-    for row in codes:
-        if filename in row:
-            quizcodemaker(col)
+    if filename in codes:
+        quizcodemaker(col)
     return filename
 
 
@@ -470,9 +461,6 @@ async def upload(ctx):
                     break
                 msg_limit += 5
 
-            #embed = await channel.history().find(lambda m: str(m.author.id) == botname)
-
-
             await embed.add_reaction("⬅️")
             await embed.add_reaction("➡️")
             await embed.add_reaction("✔️")
@@ -488,7 +476,6 @@ async def upload(ctx):
                     break
                 msg_limit += 5
 
-            #msg = await channel.history().find(lambda m: str(m.author.id) == botname)
 
             doneChecking = False
 
@@ -570,8 +557,6 @@ async def upload(ctx):
                             break
                         msg_limit += 5
 
-                    msg = await channel.history().find(lambda m: str(m.author.id) == botname)
-
                 await msg.add_reaction("✔️")
                 await msg.add_reaction("❌")
                 try:
@@ -591,7 +576,11 @@ async def upload(ctx):
                         await channel.send(mbed=discord.Embed(
                             title="You timed out!",
                             colour=discord.Colour.red()))
-                        msg = await channel.history().find(lambda m: str(m.author.id) == botname)
+                        while 1:
+                            msg = await channel.history(limit=msg_limit).find(lambda m: str(m.author.id) == botname)
+                            if msg is not None:
+                                break
+                            msg_limit += 5
                 try:
                     await msg.clear_reaction("✔️")
                     await msg.clear_reaction("❌")
@@ -603,7 +592,11 @@ async def upload(ctx):
                     await channel.send(embed=discord.Embed(
                         title="Okay, your quiz set will be " + privacySetting + ". Your current quiz name is **\"" + quizname + "\"**. Would you like to change it?",
                         colour=discord.Colour.red()))
-                    msg = await channel.history().find(lambda m: str(m.author.id) == botname)
+                    while 1:
+                        msg = await channel.history(limit=msg_limit).find(lambda m: str(m.author.id) == botname)
+                        if msg is not None:
+                            break
+                        msg_limit += 5
 
                 await msg.add_reaction("✔️")
                 await msg.add_reaction("❌")
@@ -643,7 +636,12 @@ async def upload(ctx):
                                 await msg.edit(embed=discord.Embed(
                                     title="Please type what you would like to name your quiz.",
                                     colour=discord.Colour.orange()))
-                                msg = await channel.history().find(lambda m: str(m.author.id) == botname)
+                                while 1:
+                                    msg = await channel.history(limit=msg_limit).find(
+                                        lambda m: str(m.author.id) == botname)
+                                    if msg is not None:
+                                        break
+                                    msg_limit += 5
 
                             def checkName(message):
                                 return message.channel == ctx.channel and message.author == ctx.author
@@ -662,7 +660,12 @@ async def upload(ctx):
                                     await channel.send(embed=discord.Embed(
                                         title="Your quiz's name is currently **\"" + desiredName.content + "\"**. Is this correct?",
                                         colour=discord.Colour.purple()))
-                                    msg = await channel.history().find(lambda m: str(m.author.id) == botname)
+                                    while 1:
+                                        msg = await channel.history(limit=msg_limit).find(
+                                            lambda m: str(m.author.id) == botname)
+                                        if msg is not None:
+                                            break
+                                        msg_limit += 5
 
                                 await msg.add_reaction("✔️")
                                 await msg.add_reaction("❌")
@@ -796,6 +799,7 @@ async def myQuiz(ctx):
 
 @client.command()
 async def delete(ctx, quizcode):
+    msg_limit = 5
     try:
         channel = ctx.channel
         doc = client.quiz.find_one({"_id": quizcode})
@@ -840,7 +844,11 @@ async def delete(ctx, quizcode):
 
         j = 0
         await channel.send(embed=EmbedList[j])
-        msg = await channel.history().find(lambda m: str(m.author.id) == botname)
+        while 1:
+            msg = await channel.history(limit=msg_limit).find(lambda m: str(m.author.id) == botname)
+            if msg is not None:
+                break
+            msg_limit += 5
         await channel.send(
             embed=discord.Embed(
                 title="Verify that this is the correct quiz. Navigate using the arrow keys and click the check mark when you're done checking.",
@@ -897,7 +905,11 @@ async def delete(ctx, quizcode):
                 if quizCheck.emoji.name == "✔️":
                     doneChecking = True
         await msg.delete()
-        msg = await channel.history().find(lambda m: str(m.author.id) == botname)
+        while 1:
+            msg = await channel.history(limit=msg_limit).find(lambda m: str(m.author.id) == botname)
+            if msg is not None:
+                break
+            msg_limit += 5
         await msg.edit(
             embed=discord.Embed(title="Is this the quiz set you wish to delete?", colour=discord.Colour.orange()))
         await msg.add_reaction("✔️")
@@ -977,6 +989,7 @@ async def help(ctx):
 
 @client.command()
 async def edit(ctx, quizKey):
+    msg_limit = 5
     MessageMan = True
     try:
         channel = ctx.channel
@@ -991,7 +1004,11 @@ async def edit(ctx, quizKey):
                                 description="Are you fine with this?",
                                 color=discord.Colour.blue())
         await channel.send(embed=privacy)
-        msg = await channel.history().find(lambda m: str(m.author.id) == botname)
+        while 1:
+            msg = await channel.history(limit=msg_limit).find(lambda m: str(m.author.id) == botname)
+            if msg is not None:
+                break
+            msg_limit += 5
         await msg.add_reaction("✔️")
         await msg.add_reaction("❌")
 
@@ -1021,7 +1038,11 @@ async def edit(ctx, quizKey):
                     await channel.send(
                         embed=discord.Embed(description="Would you like to switch this quiz to " + private + "?",
                                             color=discord.Colour.blue()))
-                    msg = await channel.history().find(lambda m: str(m.author.id) == botname)
+                    while 1:
+                        msg = await channel.history(limit=msg_limit).find(lambda m: str(m.author.id) == botname)
+                        if msg is not None:
+                            break
+                        msg_limit += 5
                 await msg.add_reaction("✔️")
                 await msg.add_reaction("❌")
                 try:
@@ -1061,7 +1082,11 @@ async def edit(ctx, quizKey):
                                  description="Would you like to keep this?",
                                  color=discord.Colour.blue())
         await channel.send(embed=question)
-        msg = await channel.history().find(lambda m: str(m.author.id) == botname)
+        while 1:
+            msg = await channel.history(limit=msg_limit).find(lambda m: str(m.author.id) == botname)
+            if msg is not None:
+                break
+            msg_limit += 5
         await msg.add_reaction("✔️")
         await msg.add_reaction("❌")
 
@@ -1093,7 +1118,11 @@ async def edit(ctx, quizKey):
                         await channel.send(
                             embed=discord.Embed(description="Would you like to set the quiz name to " + name + "?",
                                                 color=discord.Colour.blue()))
-                        msg = await channel.history().find(lambda m: str(m.author.id) == botname)
+                        while 1:
+                            msg = await channel.history(limit=msg_limit).find(lambda m: str(m.author.id) == botname)
+                            if msg is not None:
+                                break
+                            msg_limit += 5
                     await msg.add_reaction("✔️")
                     await msg.add_reaction("❌")
                     try:
@@ -1170,7 +1199,11 @@ async def edit(ctx, quizKey):
 
         j = 0
         await channel.send(embed=EmbedList[j])
-        msg = await channel.history().find(lambda m: str(m.author.id) == botname)
+        while 1:
+            msg = await channel.history(limit=msg_limit).find(lambda m: str(m.author.id) == botname)
+            if msg is not None:
+                break
+            msg_limit += 5
         await channel.send(
             embed=discord.Embed(
                 description="These are the questions this quiz has. Navigate using the arrow keys and click the check mark when you're done checking.",
@@ -1227,7 +1260,11 @@ async def edit(ctx, quizKey):
                 if quizCheck.emoji.name == "✔️":
                     doneChecking = True
         await msg.delete()
-        msg = await channel.history().find(lambda m: str(m.author.id) == botname)
+        while 1:
+            msg = await channel.history(limit=msg_limit).find(lambda m: str(m.author.id) == botname)
+            if msg is not None:
+                break
+            msg_limit += 5
         await msg.edit(
             embed=discord.Embed(description="Are you fine with these questions?", colour=discord.Colour.orange()))
         await msg.add_reaction("✔️")
@@ -1323,7 +1360,11 @@ async def edit(ctx, quizKey):
 
                         j = 0
                         await channel.send(embed=EmbedList[j])
-                        embed = await channel.history().find(lambda m: str(m.author.id) == botname)
+                        while 1:
+                            embed = await channel.history(limit=msg_limit).find(lambda m: str(m.author.id) == botname)
+                            if embed is not None:
+                                break
+                            msg_limit += 5
                         await embed.add_reaction("⬅️")
                         await embed.add_reaction("➡️")
                         await embed.add_reaction("✔️")
@@ -1331,7 +1372,11 @@ async def edit(ctx, quizKey):
                             embed=discord.Embed(
                                 title="These are the new questions you made. Please navigate through them using the arrow keys. Press the checkmark reaction once you're done checking",
                                 colour=discord.Colour.dark_magenta()))
-                        msg = await channel.history().find(lambda m: str(m.author.id) == botname)
+                        while 1:
+                            msg = await channel.history(limit=msg_limit).find(lambda m: str(m.author.id) == botname)
+                            if msg is not None:
+                                break
+                            msg_limit += 5
                         doneChecking = False
 
                         def Ncheckdirection(reaction, user):
