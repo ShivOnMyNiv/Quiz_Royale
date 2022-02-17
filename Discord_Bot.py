@@ -253,15 +253,7 @@ async def run(message, Id):
             for emoji in emojis[:len(row[5:])]:
                 await msg.add_reaction(emoji)
 
-            """
-            1. Starts recording time
-            2. Creates embed
-            3. Define check(rxn, user) function 
-            4. Calculates amount of time passed and stores in n
-            5. await asyncio.sleep(1.5 - n)
-            """
-            await asyncio.sleep(1.5)
-
+            embedstart = time.time()
             for i, e in enumerate(emojis[:len(row[5:])]):
                 if row[5 + i] == "TRUE":
                     row[5 + i] = "True"
@@ -270,7 +262,6 @@ async def run(message, Id):
                 embed.add_field(name=e, value=row[5 + i])
             embed.set_footer(text="You have " + row[4] + " seconds")
             await msg.edit(embed=embed)
-
             def check(rxn, user):
                 message = rxn.message
                 if len(message.embeds) == 0:
@@ -280,6 +271,12 @@ async def run(message, Id):
                     return True
                 else:
                     return False
+            embedend= time.time()
+            embedtime = embedend - embedstart
+
+            await asyncio.sleep(1.5 - embedtime)
+
+
 
             answer = "Fail"
             t0 = time.perf_counter()
@@ -320,14 +317,8 @@ async def run(message, Id):
                                    inline=False)
                 rank += 1
             await channel.send(embed=rankings)
-            
-            """
-            1. Starts recording time
-            2. Creates Final embed
-            3. Calculates amount of time passed and stores in n
-            4. await asyncio.sleep(1.5 - n)
-            """
-            await asyncio.sleep(1.5)
+
+            embedstart = time.time()
 
             if iteration == len(questions) - 1:
                 Final = discord.Embed(
@@ -344,6 +335,11 @@ async def run(message, Id):
                 await channel.send(embed=Final)
                 client.quizInfo.pop(channel.id)
                 break
+
+            embedend = time.time()
+            embedtime = embedend - embedstart
+            await asyncio.sleep(1.5 - embedtime)
+
     except Exception as e:
         print(e)
         if client.quizInfo.get(channel.id):
