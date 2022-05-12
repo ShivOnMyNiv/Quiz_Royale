@@ -22,7 +22,7 @@ import requests
 intents = discord.Intents.default()
 intents.reactions = True
 
-tokenIn = open("Token Key.txt", "r+")
+tokenIn = open("Token_Key.env", "r+")
 token = tokenIn.readline().rstrip()
 
 client = commands.Bot(command_prefix='+')
@@ -108,8 +108,12 @@ async def run(message, Id):
 
         if InvMsg.reactions[0].count <= 1:
             client.quizInfo.pop(channel.id)
-            await channel.send(
-                embed=discord.Embed(title="No players joined. Ending the game.", color=discord.Colour.red()))
+            try:
+                await InvMsg.clear_reaction(checkMarks[0])
+                await InvMsg.edit(embed=discord.Embed(title="No players joined. Ending the game.", color=discord.Colour.red()))
+            except:
+                await channel.send(
+                    embed=discord.Embed(title="No players joined. Ending the game.", color=discord.Colour.red()))
             return
         await channel.send(embed=discord.Embed(
             title="Press 🇦 to play by elimination (wrong answers get you kicked) or 🇧 to play by subtraction (wrong "
@@ -370,13 +374,19 @@ async def upload(ctx):
     EmbedList = []
     Qnum = 1
 
-    await ctx.send("Please upload your .CSV file.")
+    await channel.send(embed=discord.Embed(
+        title="Please upload your .CSV file",
+        colour=discord.Colour.orange()))
+    msg = await channel.history(limit=msg_limit).find(lambda m: str(m.author.id) == botname)
 
     def check(message):
         return message.author == ctx.author and message.attachments[0].filename.endswith('.csv')
 
     try:
         message = await client.wait_for('message', timeout=25.0, check=check)
+        await msg.edit(embed=discord.Embed(
+            title="File Uploaded",
+            colour=discord.Colour.green()))
         file = message.attachments
         unique_quizcode = quizcodemaker(client.quiz)
 
@@ -781,11 +791,25 @@ async def upload(ctx):
             return
 
     except asyncio.TimeoutError:
-        await ctx.channel.send("You timed out!")
+        try:
+            await msg.edit(embed=discord.Embed(
+                title="You timed out!",
+                colour=discord.Colour.red()))
+        except:
+            await channel.send(embed=discord.Embed(
+                title="You timed out!",
+                colour=discord.Colour.red()))
         return
-
     except:
-        await ctx.channel.send("There was an issue reading your .csv file. Please retry the command.")
+        try:
+            await msg.edit(embed=discord.Embed(
+                title="There was an issue reading your .csv file. Please retry the command.",
+                colour=discord.Colour.red()))
+        except:
+            await channel.send(embed=discord.Embed(
+                title="There was an issue reading your .csv file. Please retry the command.!",
+                colour=discord.Colour.red()))
+        return
 
 
 @client.command()
